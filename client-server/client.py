@@ -16,19 +16,27 @@ class Client():
         self.initialized = False
         self.s = socket.socket()
         self.configurate_socket()
+        self.sockname = self.s.getsockname()
         self.block_to_send_message()
         pass
 
     # (important) sends user input to server
     def block_to_send_message(self):
         while True:
-            
             def make_message():
                 # Client configuration message
                 if not self.initialized:
                     self.initialized = True
                     return f"{CENUM_START_OF_MESSAGE}{sep}{CENUM_CLIENT_CONFIG}{sep}{self.nickname}{sep}{self.s.getsockname()}"
                 
+                # Send message
+                message = "hello my brother!"
+                sendto = input("enter sockname of other client")
+                print(sendto)
+                to_send = f"{CENUM_START_OF_MESSAGE}{sep}{CENUM_INDIVIDUALMESSAGE}{sep}{self.sockname}{sep}{sendto}{sep}"
+                to_send += f"{message}"
+                return to_send
+
                 # Whatever you want to send
                 to_send = input()
                 date_now = datetime.now().strftime('%Y-%m-%d %H:%M:%S') 
@@ -40,6 +48,7 @@ class Client():
     def configurate_socket(self):
         self.s.connect((SERVER_HOST, SERVER_PORT))
         self.listen_server()
+        print(self.s.getsockname())
 
     def listen_server(self):
         def listen_for_messages():

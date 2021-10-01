@@ -23,12 +23,18 @@ class User():
 class Server():
     def __init__(self) -> None:
         self.users = set()
+        # str here refers to User#port
         self.client_sockets: dict[str, socket.socket] = {}
         self.configurate_socket()
         pass
     
     def add_user(self, new_user: User):
         self.users.add(new_user)
+
+    # returns list of users that are connected
+    def get_connected_users(self):
+        # return list of addresses concatenated with 'sep'
+        pass
 
     def configurate_socket(self):
         self.s = socket.socket()
@@ -64,20 +70,36 @@ class Server():
                 cs.send(f"{msg_parts[CENUM_CLIENT_CONFIG_NICKNAME]}, you are online now!".encode())
                 continue
 
+            # client sent a message to another client
+            if msg.startswith(CENUM_START_OF_MESSAGE+sep+CENUM_INDIVIDUALMESSAGE):
+                msg_parts = msg.split(sep)
+                if len(msg_parts) is not CENUM_INDIVIDUALMESSAGE_len:
+                    cs.send("Individual message error: Message format is not supported".encode())
+                    continue
+                
+                message_to_send = msg_parts[CENUM_INDIVIDUALMESSAGE_MESSAGE]
+                socket_to_send_message_to = msg_parts[CENUM_INDIVIDUALMESSAGE_RECEIVER_SOCKET]
+
+
+                # send message to the receiver socket
+                self.client_sockets[socket_to_send_message_to].send(
+                    f"{CENUM_RCV_INDIVIDUALMESSAGE}{sep}{cs.getsockname()}{sep}{message_to_send}".encode()
+                )
+                continue
+
             for key in self.client_sockets:
                 msg = msg.replace(separator_token, ": ")
                 self.client_sockets[key].send(msg.encode())
-
 
     def block_for_connection(self):
         while True:
             client_socket, client_address = self.s.accept()
             print(f"[+] {client_address} connected.")
-            self.client_sockets[client_socket.getsockname] = client_socket
+            # socket_stringified = str(client_socket.getsockname())
+            self.client_sockets[str(client_address)] = client_socket
             t = Thread(target=self.listen_for_client, args=(client_socket,))
             t.daemon = True
             t.start()
-    
     
     def finish_server(self):
         for key in self.client_sockets:
