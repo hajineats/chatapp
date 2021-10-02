@@ -5,7 +5,7 @@ from constants import *
 from base import ControllerBase
 from socket import socket
 import socket as socket_module
-import time
+from comm_enum import *
 
 def trap_exc_during_debug(*args):
     # when app raises uncaught exception, print info
@@ -39,18 +39,28 @@ class Worker(QThread):
         self.wait()
 
     def run(self):
-        self.unconnectedWidget.l_status.setText("this kinda runs?")
-        bool = False
-        # receive
         while True:
             try:
-                if not bool:
-                    message = self.socket.recv(BUFSIZE).decode()
-                    # check message, then emit signal
-                    if message:
-                        print(message)
+                message = self.socket.recv(BUFSIZE).decode()
+                # check message, then emit signal
+                if message:
+                    print("[WORKER]",message)
+
+                    msg_parts = message.split(sep)
+                    # Receive message about configuration success
+                    if msg_parts[MSG_TYPE] == CENUM_CLIENT_CONFIG:
                         self.signal_initialize.emit(str(message))
-                        bool = True
+                    
+                    # TODO: receive message about updated list of users
+
+
+                    # Receive message about 1:1 message
+                    if msg_parts[MSG_TYPE] == CENUM_RCV_INDIVIDUALMESSAGE:
+                        self.signal_chat_individual.emit(str(message))
+
+                    
+                    # group message
+
                 
 
             except Exception as e:
@@ -72,19 +82,21 @@ class UnconnectedWidget(QWidget):
         if ip_addr and port and nickname:
             try:
                 port = int(port)
-                # self.controller.changePageTo(PAGE_CONNECTED)
 
                 # set up socket
                 self.socket = socket(socket_module.AF_INET, socket_module.SOCK_STREAM)
                 self.socket.connect((ip_addr, port))
-                print(self.socket.recv(1024).decode())
                 
                 self.nickname = nickname
                 # set up worker
                 self.worker = Worker(self.socket, self)
-                self.worker.signal_initialize.connect(lambda: self.l_status.setText("something did indeed happen!"))
+                # TODO: set up signals
+                self.worker.signal_initialize.connect(lambda msg: self.controller.changePageTo(PAGE_CONNECTED))
                 self.worker.start()
 
+                # notify server about client config information
+                config_msg = f"{CENUM_START_OF_MESSAGE}{sep}{CENUM_CLIENT_CONFIG}{sep}{self.nickname}{sep}{self.socket.getsockname()}"
+                self.socket.send(config_msg.encode())
 
             except ValueError as e:
                 self.l_status.setText("IP address should be in the correct format!")
@@ -92,8 +104,6 @@ class UnconnectedWidget(QWidget):
             except ConnectionRefusedError as e:
                 self.l_status.setText("Connection Refused! Enter valid server IP address")
                 print(e)
-
-
 
 
     def initUI(self):

@@ -67,10 +67,8 @@ class Server():
                 new_user = User(msg_parts[CENUM_CLIENT_CONFIG_NICKNAME], msg_parts[CENUM_CLIENT_CONFIG_SOCKNAME])
                 self.add_user(new_user)
                 print(msg)
-                while True:
-                    time.sleep(1)
-                    print("sending...")
-                    cs.send(f"{msg_parts[CENUM_CLIENT_CONFIG_NICKNAME]}, you are online now!".encode())
+                # echo message back on user creation success
+                cs.send(msg.encode())
                 continue
 
             # client sent a message to another client
@@ -86,7 +84,7 @@ class Server():
 
                 # send message to the receiver socket
                 self.client_sockets[socket_to_send_message_to].send(
-                    f"{CENUM_RCV_INDIVIDUALMESSAGE}{sep}{cs.getsockname()}{sep}{message_to_send}".encode()
+                    f"{CENUM_START_OF_MESSAGE}{sep}{CENUM_RCV_INDIVIDUALMESSAGE}{sep}{cs.getsockname()}{sep}{message_to_send}".encode()
                 )
                 continue
 
@@ -98,10 +96,7 @@ class Server():
         while True:
             client_socket, client_address = self.s.accept()
             print(f"[+] {client_address} connected.")
-            while True:
-                time.sleep(1)
-                client_socket.send("hello!".encode())
-                print("sending!!!")
+
             # socket_stringified = str(client_socket.getsockname())
             self.client_sockets[str(client_address)] = client_socket
             t = Thread(target=self.listen_for_client, args=(client_socket,))
