@@ -65,7 +65,11 @@ class ChatBox(QWidget):
             vbox.addWidget(self.chat_browser)
             vbox.addLayout(hbox)
             close_btn = QPushButton("Close")
-            close_btn.clicked.connect(lambda: self.controller.changePageTo(PAGE_CONNECTED))
+            def go_back_to_waitingroom():
+                self.controller.connected.setGeometry(self.controller.chatbox.geometry())
+                self.controller.changePageTo(PAGE_CONNECTED)
+
+            close_btn.clicked.connect(lambda: go_back_to_waitingroom())
             vbox.addWidget(close_btn)
             return vbox
 

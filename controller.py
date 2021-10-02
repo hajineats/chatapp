@@ -1,6 +1,6 @@
 from abc import abstractmethod
 import sys
-from PyQt5.QtWidgets import (QApplication, QStackedLayout)
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QStackedLayout)
 from PyQt5.QtCore import (QThread, pyqtSignal)
 from gui_unconnected import UnconnectedWidget, Worker
 from gui_connected import LIST_CONNECTED_CLIENTS, ConnectedWidget
@@ -19,21 +19,23 @@ class Controller(ControllerBase):
         self.unconnected = UnconnectedWidget(self)
         self.connected = ConnectedWidget(self)
         self.chatbox =  ChatBox(self)
-        pages = [self.unconnected,self.connected,self.chatbox]
-        
+        self.pages = [self.unconnected,self.connected,self.chatbox]
+
+
+
         self.stack = QStackedLayout()
-        self.stack.addWidget(pages[PAGE_UNCONNECTED])
-        self.stack.addWidget(pages[PAGE_CONNECTED])
-        self.stack.addWidget(pages[PAGE_CHAT])
+        self.stack.addWidget(self.pages[PAGE_UNCONNECTED])
+        self.stack.addWidget(self.pages[PAGE_CONNECTED])
+        self.stack.addWidget(self.pages[PAGE_CHAT])
         self.stack.setCurrentIndex(PAGE_UNCONNECTED)
         pass
 
     def setup_signal_handler(self, worker: Worker):
-        worker.signal_initialize.connect(lambda msg: self.changePageTo(PAGE_CONNECTED))
-        worker.signal_member_added.connect(lambda msg: self.connected.update_listview(
-            LIST_CONNECTED_CLIENTS,
-            msg.split(sep)[SENUM_USERLIST_USERS].split(";")))
-        
+        def moving_to_connect(msg: str):
+            # unify location of connected window
+            self.connected.setGeometry(self.unconnected.geometry())
+            self.changePageTo(PAGE_CONNECTED)
+
         def someone_sent_me_message(msg: str):
             sender_sockname = msg.split(sep)[CENUM_RCV_INDIVIDUALMESSAGE_SENDER_SOCKET]
             sender_message = msg.split(sep)[CENUM_RCV_INDIVIDUALMESSAGE_MESSAGE]
@@ -41,6 +43,14 @@ class Controller(ControllerBase):
             self.model.add_remote_indiv_message(sender_sockname, sender_message)
             # update gui
             self.chatbox.setChatWith(sender_sockname)
+
+
+        worker.signal_initialize.connect(lambda msg: moving_to_connect(msg))
+        worker.signal_member_added.connect(lambda msg: self.connected.update_listview(
+            LIST_CONNECTED_CLIENTS,
+            msg.split(sep)[SENUM_USERLIST_USERS].split(";")))
+        
+        
 
         worker.signal_chat_individual.connect(lambda msg: someone_sent_me_message(msg))
 
@@ -52,6 +62,7 @@ class Controller(ControllerBase):
         # TODO feedback: if indivtochat is empty, tell user to select a user to chat.
         if indivtochat is not None:
             self.chatbox.setChatWith(indivtochat)
+            self.chatbox.setGeometry(self.connected.geometry())
             self.changePageTo(PAGE_CHAT)
 
     def exitTheApp(self):
@@ -64,7 +75,9 @@ class Controller(ControllerBase):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-
-    Controller()
+    controller = Controller()
+    mainwindow = QMainWindow()
+    mainwindow.setLayout(controller.stack)
+    
     sys.exit(app.exec_())
 
