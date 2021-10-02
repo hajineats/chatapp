@@ -42,26 +42,34 @@ class Worker(QThread):
         while True:
             try:
                 message = self.socket.recv(BUFSIZE).decode()
-                # check message, then emit signal
-                if message:
-                    print("[WORKER]",message)
 
-                    msg_parts = message.split(sep)
-                    # Receive message about configuration success
-                    if msg_parts[MSG_TYPE] == CENUM_CLIENT_CONFIG:
-                        self.signal_initialize.emit(str(message))
-                    
-                    # TODO: receive message about updated list of users
-                    if msg_parts[MSG_TYPE] == SENUM_USERLIST:
-                        self.signal_member_added.emit(str(message))
+                # separate messages (in case there are multiple messages)
+                messages = message.split(CENUM_START_OF_MESSAGE)[1:]
+                print("[WORKER]",message)
+                
+                for m in messages:
+                    # start of message would have been gone in splition, so reappend that starting part
+                    m = f"{CENUM_START_OF_MESSAGE}{m}"
+                    print("[WORKER] Processing this message", m)
+                    # check message, then emit signal
+                    if m:
+                        msg_parts = m.split(sep)
+                        # Receive message about configuration success
+                        if msg_parts[MSG_TYPE] == CENUM_CLIENT_CONFIG:
+                            self.signal_initialize.emit(str(m))
+                        
+                        # TODO: receive message about updated list of users
+                        if msg_parts[MSG_TYPE] == SENUM_USERLIST:
+                            print("on it sir!", str(message))
+                            self.signal_member_added.emit(str(m))
 
-                    # Receive message about 1:1 message
-                    if msg_parts[MSG_TYPE] == CENUM_RCV_INDIVIDUALMESSAGE:
-                        # TODO: check length of msg_parts 
-                        self.signal_chat_individual.emit(str(message))
+                        # Receive message about 1:1 message
+                        if msg_parts[MSG_TYPE] == CENUM_RCV_INDIVIDUALMESSAGE:
+                            # TODO: check length of msg_parts 
+                            self.signal_chat_individual.emit(str(m))
 
-                    
-                    # group message
+                        
+                        # group message
 
                 
 

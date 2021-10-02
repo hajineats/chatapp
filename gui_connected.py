@@ -13,9 +13,11 @@ class ConnectedWidget(QWidget):
 
     def __init__(self, controller: ControllerBase):
         super().__init__()
+        self.selected_indivtochat = None
+        self.selected_grouptochat = None
         self.controller = controller
-        self.connected_clients_list = ["Alice", "Hajin"]
-        self.chat_rooms_list = ["A", "B", "C"]
+        self.connected_clients_list = ["lol huh", "huhhh"]
+        self.chat_rooms_list = ["aw", "wa"]
         self.make_two_lists()
         self.initUI()
 
@@ -27,25 +29,28 @@ class ConnectedWidget(QWidget):
         vbox.addWidget(QPushButton("Join", self))
         
         
-        grid = QGridLayout()
+        self.grid = QGridLayout()
         # first row
-        grid.addWidget(QLabel("Connected Clients"),0,0)
-        grid.addWidget(self.listview[LIST_CONNECTED_CLIENTS],1,0)
-        grid.addWidget(QPushButton("1 : 1 Chat", self),1,1,1,1, Qt.AlignTop)
+        self.grid.addWidget(QLabel("Connected Clients"),0,0)
+        self.grid.addWidget(self.listview[LIST_CONNECTED_CLIENTS],1,0)
+        btn_start_indiv_chat = QPushButton("1 : 1 Chat", self)
+        btn_start_indiv_chat.clicked.connect(lambda: self.controller.chatwith(self.selected_indivtochat))
+        self.grid.addWidget(btn_start_indiv_chat,1,1,1,1, Qt.AlignTop)
+        
 
         # second row
-        grid.addWidget(QLabel("Chat rooms"), 2, 0)
-        grid.addWidget(self.listview[LIST_CHAT_ROOMS], 3, 0)
-        grid.addLayout(vbox, 3,1,1,1,Qt.AlignTop)
+        self.grid.addWidget(QLabel("Chat rooms"), 2, 0)
+        self.grid.addWidget(self.listview[LIST_CHAT_ROOMS], 3, 0)
+        self.grid.addLayout(vbox, 3,1,1,1,Qt.AlignTop)
 
         # third row
-        grid.addWidget(QPushButton("Cancel(Back)", self),4,1)
+        self.grid.addWidget(QPushButton("Cancel(Back)", self),4,1)
 
         # set stretch to layout
-        grid.setColumnStretch(0,10)
-        grid.setColumnStretch(1,4)
+        self.grid.setColumnStretch(0,10)
+        self.grid.setColumnStretch(1,4)
 
-        self.setLayout(grid)
+        self.setLayout(self.grid)
         self.setWindowTitle('Connection Page')
         self.setGeometry(300, 300, WINDOW_WIDTH, WINDOW_HEIGHT)
         self.show()
@@ -55,24 +60,29 @@ class ConnectedWidget(QWidget):
     # another for displaying a list of chat rooms
     def make_two_lists(self):
         # initialize two lists
-        self.listview = []        
-        self.listview.append(QListWidget())
-        self.listview.append(QListWidget())
+        self.listview = [None, None]        
+        self.listview[LIST_CONNECTED_CLIENTS] = self.generate_list_widget(self.connected_clients_list)
+        self.listview[LIST_CHAT_ROOMS] = self.generate_list_widget(self.chat_rooms_list)
 
-        # create list for connected clients 
-        for i, v in enumerate(self.connected_clients_list):
-            self.listview[LIST_CONNECTED_CLIENTS].insertItem(i, v)
+    def update_listview(self, list_index, new_list):
+        print("i'm here!")
+        print(new_list)
+        self.listview[list_index] = self.generate_list_widget(new_list)
+        self.grid.addWidget(self.listview[list_index],list_index+1,0)
 
-        self.listview[LIST_CONNECTED_CLIENTS].clicked.connect(
-            lambda: print(self.listview[LIST_CONNECTED_CLIENTS].currentItem().text())
-        )
+    def generate_list_widget(self, with_items):
+        # TODO: add callback function as argument to customise what happens when an item is selected
+        list_widget = QListWidget()
 
-        # create list for chat rooms
-        for i, v in enumerate(self.chat_rooms_list):
-            self.listview[LIST_CHAT_ROOMS].insertItem(i, v)
+        for i, v in enumerate(with_items):
+            list_widget.insertItem(i, v)
+        
+        def select_item():
+            selected_text =list_widget.currentItem().text()
+            self.selected_indivtochat = selected_text
+            print("[LISTVIEW]",selected_text)
 
-        self.listview[LIST_CHAT_ROOMS].clicked.connect(
-            lambda: print(self.listview[LIST_CHAT_ROOMS].currentItem().text())
-        )
+        list_widget.clicked.connect(lambda: select_item())
+        return list_widget
 
 

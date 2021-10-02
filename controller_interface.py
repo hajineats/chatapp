@@ -11,3 +11,7 @@ class ControllerBase():
     @abstractmethod
     def setup_signal_handler(self, worker):
         pass
+
+    @abstractmethod
+    def chatwith(self, indivtochat):
+        pass

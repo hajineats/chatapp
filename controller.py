@@ -3,21 +3,20 @@ import sys
 from PyQt5.QtWidgets import (QApplication, QStackedLayout)
 from PyQt5.QtCore import (QThread, pyqtSignal)
 from gui_unconnected import UnconnectedWidget, Worker
-from gui_connected import ConnectedWidget
+from gui_connected import LIST_CONNECTED_CLIENTS, ConnectedWidget
 from gui_frag_chatbox import ChatBox
 from constants import *
 from controller_interface import ControllerBase
+from comm_enum import *
 import socket
-
-BUFSIZE = 1024
 
 class Controller(ControllerBase):
     def __init__(self):
         # initialize pages
-        unconnected = UnconnectedWidget(self)
-        connected = ConnectedWidget(self)
-        chatbox =  ChatBox(self)
-        pages = [unconnected,connected,chatbox]
+        self.unconnected = UnconnectedWidget(self)
+        self.connected = ConnectedWidget(self)
+        self.chatbox =  ChatBox(self)
+        pages = [self.unconnected,self.connected,self.chatbox]
 
         self.stack = QStackedLayout()
         self.stack.addWidget(pages[PAGE_UNCONNECTED])
@@ -28,9 +27,18 @@ class Controller(ControllerBase):
 
     def setup_signal_handler(self, worker: Worker):
         worker.signal_initialize.connect(lambda msg: self.changePageTo(PAGE_CONNECTED))
+        worker.signal_member_added.connect(lambda msg: self.connected.update_listview(
+            LIST_CONNECTED_CLIENTS,
+            msg.split(sep)[SENUM_USERLIST_USERS].split(";")))
 
     def changePageTo(self,index):
         self.stack.setCurrentIndex(index)
+
+
+    def chatwith(self, indivtochat):
+        self.chatbox.setChatWith(indivtochat)
+        self.changePageTo(PAGE_CHAT)
+        
 
     def exitTheApp(self):
         # do cleanup, notifying the server that it finished (so other clients can be notified)

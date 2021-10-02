@@ -1,4 +1,2 @@
-hello = set()
-hello.add("hi")
-hello.add("lol")
-print(",".join(hello))
+string = "1234512345"
+print(string.split("12"))
