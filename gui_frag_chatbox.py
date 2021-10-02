@@ -27,6 +27,7 @@ class ChatBox(QWidget):
         self.initUI()
 
 
+    # refresh the chat
     def setChatWith(self, others_sockname):
         self.chatting_entity = others_sockname
         self.chat_browser.clear()
@@ -47,8 +48,7 @@ class ChatBox(QWidget):
             def send_message():
                 # send message
                 self.model.add_indiv_message(self.chatting_entity, self.message_edit.text())
-                # append to window
-                self.chat_browser.append(self.message_edit.text())
+                self.setChatWith(self.chatting_entity)
 
             send_btn = QPushButton("Send", self)
             send_btn.clicked.connect(send_message)

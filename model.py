@@ -20,9 +20,10 @@ class Model():
         
         # is this a new message?
         if sockname not in self.indiv_chat_dict:
-            self.indiv_chat_dict[socket] = []
+            self.indiv_chat_dict[sockname] = []
         print("[DEBUG][MODEL]:",self.indiv_chat_dict[sockname])
         self.indiv_chat_dict[sockname].append(message)
+        print("---")
 
     def add_remote_indiv_message(self, sockname: str, message):
         # is this a new message?
@@ -31,9 +32,12 @@ class Model():
         
         self.indiv_chat_dict[sockname].append(f"The other guy: {message}")
         print("[MODEL]:", self.indiv_chat_dict[sockname])
+        print("---")
 
 
     def get_indiv_message(self, sockname):
         if sockname not in self.indiv_chat_dict:
             return []
+        print("---")
         return self.indiv_chat_dict[sockname]
+        
