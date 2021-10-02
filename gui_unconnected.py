@@ -2,7 +2,7 @@ import sys
 from PyQt5.QtWidgets import (QApplication, QHBoxLayout, QVBoxLayout, QWidget, QGridLayout, QLabel, QLineEdit, QTextEdit, QPushButton)
 from PyQt5.QtCore import (QThread, pyqtSignal)
 from constants import *
-from base import ControllerBase
+from controller_interface import ControllerBase
 from socket import socket
 import socket as socket_module
 from comm_enum import *
@@ -52,10 +52,12 @@ class Worker(QThread):
                         self.signal_initialize.emit(str(message))
                     
                     # TODO: receive message about updated list of users
-
+                    if msg_parts[MSG_TYPE] == SENUM_USERLIST:
+                        self.signal_member_added.emit(str(message))
 
                     # Receive message about 1:1 message
                     if msg_parts[MSG_TYPE] == CENUM_RCV_INDIVIDUALMESSAGE:
+                        # TODO: check length of msg_parts 
                         self.signal_chat_individual.emit(str(message))
 
                     
@@ -90,8 +92,7 @@ class UnconnectedWidget(QWidget):
                 self.nickname = nickname
                 # set up worker
                 self.worker = Worker(self.socket, self)
-                # TODO: set up signals
-                self.worker.signal_initialize.connect(lambda msg: self.controller.changePageTo(PAGE_CONNECTED))
+                self.controller.setup_signal_handler(self.worker)
                 self.worker.start()
 
                 # notify server about client config information
@@ -104,7 +105,6 @@ class UnconnectedWidget(QWidget):
             except ConnectionRefusedError as e:
                 self.l_status.setText("Connection Refused! Enter valid server IP address")
                 print(e)
-
 
     def initUI(self):
         # make footer

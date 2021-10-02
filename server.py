@@ -8,17 +8,20 @@ SERVER_PORT = 10000
 separator_token = "<SEP>" # we will use this to separate the client name & message
 
 class User():
-    def __init__(self, nickname, port) -> None:
+    def __init__(self, nickname, sockname) -> None:
         self.nickname = nickname
-        self.port = port
+        self.sockname = sockname
     
     def __hash__(self) -> int:
-        return hash((self.nickname, self.port))
+        return hash((self.nickname, self.sockname))
         
     def __eq__(self, o: object) -> bool:
         if isinstance(o, User):
-            return self.nickname==o.nickname and self.port==o.port
+            return self.nickname==o.nickname and self.sockname==o.sockname
         return False
+
+    def __str__(self) -> str:
+        return f"{self.nickname}@{self.sockname}"
 
 class Server():
     def __init__(self) -> None:
@@ -51,11 +54,8 @@ class Server():
                 # client no longer connected
                 print(f"[!] Error: {e}")
                 self.client_sockets.remove(cs.getsockname)
-            
-            # socket to send message to
-            
 
-            # client just started
+            # Message for client configuration
             if msg.startswith(CENUM_START_OF_MESSAGE+sep+CENUM_CLIENT_CONFIG):
                 msg_parts = msg.split(sep)
                 # client config message format
@@ -69,6 +69,8 @@ class Server():
                 print(msg)
                 # echo message back on user creation success
                 cs.send(msg.encode())
+                # send user list to everyone
+                self.sendtoeveryone_user_list()
                 continue
 
             # client sent a message to another client
@@ -88,9 +90,18 @@ class Server():
                 )
                 continue
 
-            for key in self.client_sockets:
-                msg = msg.replace(separator_token, ": ")
-                self.client_sockets[key].send(msg.encode())
+            # for key in self.client_sockets:
+            #     msg = msg.replace(separator_token, ": ")
+            #     self.client_sockets[key].send(msg.encode())
+
+    def sendtoeveryone_user_list(self):
+        print(map(lambda x: f"{x.nickname}@{x.sockname}", self.users))
+        userlist = ";".join(map(lambda x: str(x), self.users))
+        userlist = f"{CENUM_START_OF_MESSAGE}{sep}{SENUM_USERLIST}{sep}{userlist}"
+        for key in self.client_sockets:
+            self.client_sockets[key].send(userlist.encode())
+            
+
 
     def block_for_connection(self):
         while True:

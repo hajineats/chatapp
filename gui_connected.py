@@ -2,7 +2,7 @@ import sys
 from PyQt5.QtWidgets import (QApplication, QHBoxLayout, QListView, QListWidget, QVBoxLayout, QWidget, QGridLayout, QLabel, QLineEdit, QTextEdit, QPushButton)
 from PyQt5.QtCore import Qt
 from constants import *
-from base import ControllerBase
+from controller_interface import ControllerBase
 WINDOW_WIDTH = 500
 WINDOW_HEIGHT = 400
 

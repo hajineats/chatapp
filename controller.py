@@ -2,11 +2,11 @@ from abc import abstractmethod
 import sys
 from PyQt5.QtWidgets import (QApplication, QStackedLayout)
 from PyQt5.QtCore import (QThread, pyqtSignal)
-from gui_unconnected import UnconnectedWidget
+from gui_unconnected import UnconnectedWidget, Worker
 from gui_connected import ConnectedWidget
 from gui_frag_chatbox import ChatBox
 from constants import *
-from base import ControllerBase
+from controller_interface import ControllerBase
 import socket
 
 BUFSIZE = 1024
@@ -25,6 +25,9 @@ class Controller(ControllerBase):
         self.stack.addWidget(pages[PAGE_CHAT])
         self.stack.setCurrentIndex(PAGE_UNCONNECTED)
         pass
+
+    def setup_signal_handler(self, worker: Worker):
+        worker.signal_initialize.connect(lambda msg: self.changePageTo(PAGE_CONNECTED))
 
     def changePageTo(self,index):
         self.stack.setCurrentIndex(index)

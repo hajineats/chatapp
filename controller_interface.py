@@ -7,3 +7,7 @@ class ControllerBase():
     @abstractmethod
     def exitTheApp(self):
         pass
+
+    @abstractmethod
+    def setup_signal_handler(self, worker):
+        pass
