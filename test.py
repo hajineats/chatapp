@@ -1,2 +1,5 @@
-string = "1234512345"
-print(string.split("12"))
+hello: dict[str, list[str]] = {}
+hello["a"] = ["hello", "my name", "is"]
+hello["a"].append("hi")
+    
+print(hello)

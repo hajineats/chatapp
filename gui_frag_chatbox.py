@@ -13,41 +13,68 @@ class ChatBox(QWidget):
 
     def __init__(self, controller: ControllerBase):
         super().__init__()
+        # who you are chatting with
         self.chatting_entity = None
+        # the chat window
         self.chat_browser = None
+        self.message_edit = None
+
+        # controller, model
         self.controller = controller
+        self.model = controller.getmodel()
+        
+
         self.initUI()
 
 
-    def setChatWith(self, chatting_entity):
-        self.chatting_entity = chatting_entity
-        
+    def setChatWith(self, others_sockname):
+        self.chatting_entity = others_sockname
+
+    def recreateChatBrowser(self):
+        self.chat_browser = QTextBrowser()
+
 
     def createChatWindow(self):
+        # HBOX (user input)
+        if True:
+            hbox = QHBoxLayout()
+            self.message_edit = QLineEdit()
 
-        # user input portion
-        hbox = QHBoxLayout()
-        message_edit = QLineEdit()
-        send_btn = QPushButton("Send", self)
-        hbox.addWidget(message_edit)
-        hbox.addWidget(send_btn)
+            def send_message():
+                # send message
+                self.model.add_indiv_message(self.chatting_entity, self.message_edit.text())
+                # append to window
+                self.chat_browser.append(self.message_edit.text())
 
-        # dynamic portion
-        vbox = QVBoxLayout()
-        vbox.addWidget(QLabel("Chat with Alice"))
-        self.chat_browser = QTextBrowser()
-        if self.chatting_entity is not None:
-            # TODO populate self.chat_browser with data
-            pass
+            send_btn = QPushButton("Send", self)
+            send_btn.clicked.connect(send_message)
             
-        vbox.addWidget(self.chat_browser)
-        vbox.addLayout(hbox)
-        vbox.addWidget(QPushButton("Close"))
-        return vbox
+            hbox.addWidget(self.message_edit)
+            hbox.addWidget(send_btn)
+
+        # VBOX (chat window)
+        if True:
+            vbox = QVBoxLayout()
+            vbox.addWidget(QLabel("Chat with Alice"))
+            self.chat_browser = QTextBrowser()
+
+            # populate chat window
+            if self.chatting_entity is not None:
+                # TODO populate self.chat_browser with data
+                msg_list: list[str] = self.model.get_indiv_message(self.chatting_entity)
+                for msg in msg_list:
+                    self.chat_browser.append(msg)
+                pass
+            
+            vbox.addWidget(self.chat_browser)
+            vbox.addLayout(hbox)
+            close_btn = QPushButton("Close")
+            vbox.addWidget(close_btn)
+            return vbox
 
     def initUI(self):
-        # hbox to write message and send
         self.setLayout(self.createChatWindow())
+
         self.setWindowTitle('Connection Page')
         self.setGeometry(300, 300, WINDOW_WIDTH, WINDOW_HEIGHT)
         self.show()

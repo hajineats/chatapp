@@ -1,5 +1,7 @@
 from abc import abstractmethod
 
+from model import Model
+
 class ControllerBase():
     @abstractmethod
     def changePageTo(self,index):
@@ -14,4 +16,8 @@ class ControllerBase():
 
     @abstractmethod
     def chatwith(self, indivtochat):
+        pass
+
+    @abstractmethod
+    def getmodel(self) -> Model:
         pass

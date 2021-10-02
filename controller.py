@@ -8,16 +8,18 @@ from gui_frag_chatbox import ChatBox
 from constants import *
 from controller_interface import ControllerBase
 from comm_enum import *
+from model import Model
 import socket
 
 class Controller(ControllerBase):
     def __init__(self):
         # initialize pages
+        self.model = Model()
         self.unconnected = UnconnectedWidget(self)
         self.connected = ConnectedWidget(self)
         self.chatbox =  ChatBox(self)
         pages = [self.unconnected,self.connected,self.chatbox]
-
+        
         self.stack = QStackedLayout()
         self.stack.addWidget(pages[PAGE_UNCONNECTED])
         self.stack.addWidget(pages[PAGE_CONNECTED])
@@ -36,13 +38,17 @@ class Controller(ControllerBase):
 
 
     def chatwith(self, indivtochat):
-        self.chatbox.setChatWith(indivtochat)
-        self.changePageTo(PAGE_CHAT)
-        
+        # TODO feedback: if indivtochat is empty, tell user to select a user to chat.
+        if indivtochat is not None:
+            self.chatbox.setChatWith(indivtochat)
+            self.changePageTo(PAGE_CHAT)
 
     def exitTheApp(self):
         # do cleanup, notifying the server that it finished (so other clients can be notified)
         sys.exit()
+
+    def getmodel(self) -> Model:
+        return self.model
 
 
 if __name__ == '__main__':
