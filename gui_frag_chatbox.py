@@ -29,9 +29,13 @@ class ChatBox(QWidget):
 
     def setChatWith(self, others_sockname):
         self.chatting_entity = others_sockname
+        self.chat_browser.clear()
 
-    def recreateChatBrowser(self):
-        self.chat_browser = QTextBrowser()
+        msg_list: list[str] = self.model.get_indiv_message(self.chatting_entity)
+        for msg in msg_list:
+            self.chat_browser.append(msg)
+        
+ 
 
 
     def createChatWindow(self):
@@ -57,24 +61,16 @@ class ChatBox(QWidget):
             vbox = QVBoxLayout()
             vbox.addWidget(QLabel("Chat with Alice"))
             self.chat_browser = QTextBrowser()
-
-            # populate chat window
-            if self.chatting_entity is not None:
-                # TODO populate self.chat_browser with data
-                msg_list: list[str] = self.model.get_indiv_message(self.chatting_entity)
-                for msg in msg_list:
-                    self.chat_browser.append(msg)
-                pass
             
             vbox.addWidget(self.chat_browser)
             vbox.addLayout(hbox)
             close_btn = QPushButton("Close")
+            close_btn.clicked.connect(lambda: self.controller.changePageTo(PAGE_CONNECTED))
             vbox.addWidget(close_btn)
             return vbox
 
     def initUI(self):
         self.setLayout(self.createChatWindow())
-
         self.setWindowTitle('Connection Page')
         self.setGeometry(300, 300, WINDOW_WIDTH, WINDOW_HEIGHT)
         self.show()

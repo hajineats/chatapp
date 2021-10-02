@@ -50,6 +50,7 @@ class Server():
         while True:
             try:
                 msg = cs.recv(1024).decode()
+                print("[SERVER]:",msg)
             except Exception as e:
                 # client no longer connected
                 print(f"[!] Error: {e}")
@@ -81,12 +82,11 @@ class Server():
                     continue
                 
                 message_to_send = msg_parts[CENUM_INDIVIDUALMESSAGE_MESSAGE]
-                socket_to_send_message_to = msg_parts[CENUM_INDIVIDUALMESSAGE_RECEIVER_SOCKET]
-
+                socket_to_send_message_to = msg_parts[CENUM_INDIVIDUALMESSAGE_RECEIVER_SOCKET].split("@")[1]
 
                 # send message to the receiver socket
                 self.client_sockets[socket_to_send_message_to].send(
-                    f"{CENUM_START_OF_MESSAGE}{sep}{CENUM_RCV_INDIVIDUALMESSAGE}{sep}{cs.getsockname()}{sep}{message_to_send}".encode()
+                    f"{CENUM_START_OF_MESSAGE}{sep}{CENUM_RCV_INDIVIDUALMESSAGE}{sep}{msg_parts[CENUM_INDIVIDUALMESSAGE_SENDER_SOCKET]}{sep}{message_to_send}".encode()
                 )
                 continue
 

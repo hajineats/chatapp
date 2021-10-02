@@ -65,6 +65,7 @@ class Worker(QThread):
 
                         # Receive message about 1:1 message
                         if msg_parts[MSG_TYPE] == CENUM_RCV_INDIVIDUALMESSAGE:
+                            print("[DEBUG][WORKER]:", m)
                             # TODO: check length of msg_parts 
                             self.signal_chat_individual.emit(str(m))
 
@@ -102,6 +103,10 @@ class UnconnectedWidget(QWidget):
                 self.worker = Worker(self.socket, self)
                 self.controller.setup_signal_handler(self.worker)
                 self.worker.start()
+
+                self.controller.model.socket = self.socket
+                self.controller.nickname = self.nickname
+                self.controller.model.nickname = self.nickname
 
                 # notify server about client config information
                 config_msg = f"{CENUM_START_OF_MESSAGE}{sep}{CENUM_CLIENT_CONFIG}{sep}{self.nickname}{sep}{self.socket.getsockname()}"

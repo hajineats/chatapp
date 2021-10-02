@@ -15,6 +15,7 @@ class Controller(ControllerBase):
     def __init__(self):
         # initialize pages
         self.model = Model()
+        
         self.unconnected = UnconnectedWidget(self)
         self.connected = ConnectedWidget(self)
         self.chatbox =  ChatBox(self)
@@ -32,6 +33,16 @@ class Controller(ControllerBase):
         worker.signal_member_added.connect(lambda msg: self.connected.update_listview(
             LIST_CONNECTED_CLIENTS,
             msg.split(sep)[SENUM_USERLIST_USERS].split(";")))
+        
+        def someone_sent_me_message(msg: str):
+            sender_sockname = msg.split(sep)[CENUM_RCV_INDIVIDUALMESSAGE_SENDER_SOCKET]
+            sender_message = msg.split(sep)[CENUM_RCV_INDIVIDUALMESSAGE_MESSAGE]
+            # add to cache
+            self.model.add_remote_indiv_message(sender_sockname, sender_message)
+            # update gui
+            self.chatbox.setChatWith(sender_sockname)
+
+        worker.signal_chat_individual.connect(lambda msg: someone_sent_me_message(msg))
 
     def changePageTo(self,index):
         self.stack.setCurrentIndex(index)
