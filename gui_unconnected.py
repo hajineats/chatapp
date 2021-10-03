@@ -26,12 +26,13 @@ class Worker(QThread):
     signal_chat_group = pyqtSignal(str)
     signal_initialize = pyqtSignal(str)
     signal_member_added = pyqtSignal(str)
+    signal_group_added = pyqtSignal(str)
 
     def __init__(self, socket_to_use:socket, unconnectedWidget,parent=None):
         super(Worker, self).__init__(parent)
         self.working = True
         self.socket = socket_to_use
-        self.unconnectedWidget : UnconnectedWidget = unconnectedWidget
+        self.unconnectedWidget = unconnectedWidget
 
 
     def __det__(self):
@@ -65,11 +66,14 @@ class Worker(QThread):
 
                         # Receive message about 1:1 message
                         if msg_parts[MSG_TYPE] == CENUM_RCV_INDIVIDUALMESSAGE:
-                            print("[DEBUG][WORKER]:", m)
                             # TODO: check length of msg_parts 
                             self.signal_chat_individual.emit(str(m))
 
-                        
+                        # Receive message about new group
+                        if msg_parts[MSG_TYPE] == SENUM_GROUPCREATED:
+                            self.signal_group_added.emit(str(m))
+
+
                         # group message
 
                 

@@ -24,12 +24,24 @@ class User():
         return f"{self.nickname}@{self.sockname}"
 
 class Group():
-    def __init__(self, nicksockname, room_number) -> None:
+    def __init__(self, nicksockname="", room_number="") -> None:
         self.creator_nicksockname = nicksockname
         self.room_number = room_number
         # nicksockname of participants
         self.participants: list[str] = []
         pass
+
+    def __hash__(self) -> int:
+        return hash(self.room_number)
+    
+    def __eq__(self, o: object) -> bool:
+        if isinstance(o, Group):
+            return self.room_number==o.room_number
+        return False
+
+    def __str__(self) -> str:
+        participants_concat = "|".join(self.participants)
+        return f"{self.creator_nicksockname}@{self.room_number}@{participants_concat}"
 
 class Server():
     def __init__(self) -> None:
@@ -39,6 +51,7 @@ class Server():
         self.configurate_socket()
         # key: group number, value: group object
         self.groups: dict[str,Group] = {}
+        self.group_number = 0
     
     def add_user(self, new_user: User):
         self.users.add(new_user)
@@ -95,6 +108,26 @@ class Server():
                 )
                 continue
 
+            msg_parts = msg.split(sep)
+            # client sends a message to create a group
+            if msg_parts[MSG_TYPE] == CENUM_CREATEGROUP:
+                # create a group object and change server state
+                new_group = Group(msg_parts[CENUM_CREATEGROUP_CREATORNICKSOCK], self.group_number)
+                self.groups[self.group_number] = new_group
+                
+                # create a senum message to broadcast to everyone
+                grouplist = ";".join(map(lambda x: str(x), self.groups.values()))
+                grouplist = f"{CENUM_START_OF_MESSAGE}{sep}{SENUM_GROUPCREATED}{sep}{msg_parts[CENUM_CREATEGROUP_CREATORNICKSOCK]}{sep}{self.group_number}"
+                for key in self.client_sockets:
+                    self.client_sockets[key].send(grouplist.encode())
+
+
+                # increment group number
+                self.group_number = self.group_number + 1
+                
+                
+
+
             # for key in self.client_sockets:
             #     msg = msg.replace(separator_token, ": ")
             #     self.client_sockets[key].send(msg.encode())
@@ -105,7 +138,7 @@ class Server():
         userlist = f"{CENUM_START_OF_MESSAGE}{sep}{SENUM_USERLIST}{sep}{userlist}"
         for key in self.client_sockets:
             self.client_sockets[key].send(userlist.encode())
-            
+    
 
 
     def block_for_connection(self):

@@ -2,8 +2,10 @@ from abc import abstractmethod
 import sys
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QStackedLayout)
 from PyQt5.QtCore import (QThread, pyqtSignal)
+from gui_groupchat import GroupchatBox
+
 from gui_unconnected import UnconnectedWidget, Worker
-from gui_connected import LIST_CONNECTED_CLIENTS, ConnectedWidget
+from gui_connected import LIST_CHAT_ROOMS, LIST_CONNECTED_CLIENTS, ConnectedWidget
 from gui_frag_chatbox import ChatBox
 from constants import *
 from controller_interface import ControllerBase
@@ -17,16 +19,17 @@ class Controller(ControllerBase):
         self.model = Model()
         
         self.unconnected = UnconnectedWidget(self)
-        self.connected = ConnectedWidget(self)
+        self.connected: ConnectedWidget= ConnectedWidget(self)
         self.chatbox =  ChatBox(self)
-        self.pages = [self.unconnected,self.connected,self.chatbox]
-
+        self.groupchatbox = GroupchatBox(self)
+        self.pages = [self.unconnected,self.connected,self.chatbox, self.groupchatbox]
 
 
         self.stack = QStackedLayout()
         self.stack.addWidget(self.pages[PAGE_UNCONNECTED])
         self.stack.addWidget(self.pages[PAGE_CONNECTED])
         self.stack.addWidget(self.pages[PAGE_CHAT])
+        self.stack.addWidget(self.pages[PAGE_GROUPCHAT])
         self.stack.setCurrentIndex(PAGE_UNCONNECTED)
         pass
 
@@ -44,15 +47,21 @@ class Controller(ControllerBase):
             # update gui
             self.chatbox.setChatWith(sender_sockname)
 
+        def someone_created_group(msg: str):
+            # change model
+            self.model.handle_group_creation(msg)
+            self.connected.update_listview(
+                LIST_CHAT_ROOMS,
+                self.model.get_groups()
+            )
 
         worker.signal_initialize.connect(lambda msg: moving_to_connect(msg))
         worker.signal_member_added.connect(lambda msg: self.connected.update_listview(
             LIST_CONNECTED_CLIENTS,
             msg.split(sep)[SENUM_USERLIST_USERS].split(";")))
-        
-        
-
         worker.signal_chat_individual.connect(lambda msg: someone_sent_me_message(msg))
+        worker.signal_group_added.connect(lambda msg: someone_created_group(msg))
+        
 
     def changePageTo(self,index):
         self.stack.setCurrentIndex(index)

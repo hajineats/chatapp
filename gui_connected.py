@@ -16,6 +16,7 @@ class ConnectedWidget(QWidget):
         self.selected_indivtochat = None
         self.selected_grouptochat = None
         self.controller = controller
+        self.model = self.controller.model
         self.connected_clients_list = ["lol huh", "huhhh"]
         self.chat_rooms_list = ["aw", "wa"]
         self.make_two_lists()
@@ -25,7 +26,12 @@ class ConnectedWidget(QWidget):
     def initUI(self):
         # vbox{create, join}
         vbox = QVBoxLayout()
-        vbox.addWidget(QPushButton("Create", self))
+        btn_create_group = QPushButton("Create", self)
+        def create_group():
+            self.model.create_group()
+
+        btn_create_group.clicked.connect(create_group)
+        vbox.addWidget(btn_create_group)
         vbox.addWidget(QPushButton("Join", self))
         
         
@@ -68,7 +74,9 @@ class ConnectedWidget(QWidget):
         print("i'm here!")
         print(new_list)
         self.listview[list_index] = self.generate_list_widget(new_list)
-        self.grid.addWidget(self.listview[list_index],list_index+1,0)
+        self.listview[list_index].scrollToBottom()
+        self.grid.addWidget(self.listview[list_index],2*list_index+1,0)
+
 
     def generate_list_widget(self, with_items):
         # TODO: add callback function as argument to customise what happens when an item is selected
@@ -84,5 +92,6 @@ class ConnectedWidget(QWidget):
 
         list_widget.clicked.connect(lambda: select_item())
         return list_widget
-
+    
+    
 

@@ -2,22 +2,27 @@ import sys
 from PyQt5.QtWidgets import (QApplication, QHBoxLayout, QListView, QListWidget, QTextBrowser, QVBoxLayout, QWidget, QGridLayout, QLabel, QLineEdit, QTextEdit, QPushButton)
 from PyQt5.QtCore import Qt
 from constants import *
-
+from controller_interface import ControllerBase
 WINDOW_WIDTH = 500
 WINDOW_HEIGHT = 400
 
 LIST_CONNECTED_CLIENTS = 0
 LIST_CHAT_ROOMS = 1
 
-class ChatBox(QWidget):
-
-    def __init__(self):
+class GroupchatBox(QWidget):
+    def __init__(self, controller: ControllerBase):
         super().__init__()
+        # who you are chatting with
         self.chatting_entity = None
+        # the chat window
         self.chat_browser = None
         self.message_edit = None
-        # self.initUI()
 
+        # controller, model
+        self.controller = controller
+        self.model = controller.getmodel()
+        
+        self.initUI()
 
     # refresh the chat
     def setChatWith(self, others_sockname):
@@ -54,21 +59,13 @@ class ChatBox(QWidget):
             vbox.addWidget(self.chat_browser)
             vbox.addLayout(hbox)
             close_btn = QPushButton("Close")
+            def go_back_to_waitingroom():
+                self.controller.connected.setGeometry(self.controller.chatbox.geometry())
+                self.controller.changePageTo(PAGE_CONNECTED)
+
+            close_btn.clicked.connect(lambda: go_back_to_waitingroom())
             vbox.addWidget(close_btn)
             return vbox
-
-
-
-    # def initUI(self):
-    #     self.setLayout(self.createChatWindow())
-    #     self.setWindowTitle('Connection Page')
-    #     self.setGeometry(300, 300, WINDOW_WIDTH, WINDOW_HEIGHT)
-    #     self.show()
-
-class GroupchatWrapper(QWidget):
-    def __init__(self):
-        super().__init__()
-        self.initUI()
 
 
     def initUI(self):
@@ -83,7 +80,7 @@ class GroupchatWrapper(QWidget):
         vbox_member_list.addWidget(QPushButton("Invite"))
 
         hbox = QHBoxLayout()
-        hbox.addLayout(ChatBox().createChatWindow())
+        hbox.addLayout(self.createChatWindow())
         hbox.addLayout(vbox_member_list)
         hbox.setStretch(0, 10)
         hbox.setStretch(1, 4)
@@ -94,7 +91,3 @@ class GroupchatWrapper(QWidget):
         self.show()
 
 
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    page = GroupchatWrapper()
-    sys.exit(app.exec_())

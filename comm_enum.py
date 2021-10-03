@@ -35,7 +35,7 @@ CENUM_CREATEGROUP_len = 3
 CENUM_CREATEGROUP = "CREATEGROUP"
 CENUM_CREATEGROUP_CREATORNICKSOCK = 2
 
-# server lets people know the group is created, with the generated group name (most likely ID) appended
+# server lets people know the group is created, with the generated group name (most likely ID) appended. everyone gets this message
 SENUM_GROUPCREATED_len = 4
 SENUM_GROUPCREATED = "NEWGROUP"
 SENUM_GROUPCREATED_CREATORNICKSOCK = 2
@@ -47,6 +47,11 @@ CENUM_JOINGROUP = "JOINGROUP"
 CENUM_JOINGROUP_CREATORNICKSOCK = 2
 CENUM_JOINGROUP_GROUPNAME = 3
 CENUM_JOINGROUP_JOINERNICKSOCK = 4
+
+# server lets everyone know that a new client joined (by sending the updated list of participants)
+SENUM_SOMEONEJOINEDGROUP_len = 3
+SENUM_SOMEONEJOINEDGROUP = "SOMEONE_JOINED_THE_GROUP"
+SENUM_SOMEONEJOINEDGROUP_LISTOFUSERS = 2
 
 # client sends a group message (server relays this message)
 CENUM_GROUPMESSAGE_len = 5
