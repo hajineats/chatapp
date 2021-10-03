@@ -2,23 +2,26 @@ import socket
 from threading import Thread
 from typing import final
 from comm_enum import *
-
+import time
 SERVER_HOST = "0.0.0.0"
 SERVER_PORT = 10000 
 separator_token = "<SEP>" # we will use this to separate the client name & message
 
 class User():
-    def __init__(self, nickname, port) -> None:
+    def __init__(self, nickname, sockname) -> None:
         self.nickname = nickname
-        self.port = port
+        self.sockname = sockname
     
     def __hash__(self) -> int:
-        return hash((self.nickname, self.port))
+        return hash((self.nickname, self.sockname))
         
     def __eq__(self, o: object) -> bool:
         if isinstance(o, User):
-            return self.nickname==o.nickname and self.port==o.port
+            return self.nickname==o.nickname and self.sockname==o.sockname
         return False
+
+    def __str__(self) -> str:
+        return f"{self.nickname}@{self.sockname}"
 
 class Server():
     def __init__(self) -> None:
@@ -47,15 +50,13 @@ class Server():
         while True:
             try:
                 msg = cs.recv(1024).decode()
+                print("[SERVER]:",msg)
             except Exception as e:
                 # client no longer connected
                 print(f"[!] Error: {e}")
                 self.client_sockets.remove(cs.getsockname)
-            
-            # socket to send message to
-            
 
-            # client just started
+            # Message for client configuration
             if msg.startswith(CENUM_START_OF_MESSAGE+sep+CENUM_CLIENT_CONFIG):
                 msg_parts = msg.split(sep)
                 # client config message format
@@ -67,7 +68,10 @@ class Server():
                 new_user = User(msg_parts[CENUM_CLIENT_CONFIG_NICKNAME], msg_parts[CENUM_CLIENT_CONFIG_SOCKNAME])
                 self.add_user(new_user)
                 print(msg)
-                cs.send(f"{msg_parts[CENUM_CLIENT_CONFIG_NICKNAME]}, you are online now!".encode())
+                # echo message back on user creation success
+                cs.send(msg.encode())
+                # send user list to everyone
+                self.sendtoeveryone_user_list()
                 continue
 
             # client sent a message to another client
@@ -78,23 +82,32 @@ class Server():
                     continue
                 
                 message_to_send = msg_parts[CENUM_INDIVIDUALMESSAGE_MESSAGE]
-                socket_to_send_message_to = msg_parts[CENUM_INDIVIDUALMESSAGE_RECEIVER_SOCKET]
-
+                socket_to_send_message_to = msg_parts[CENUM_INDIVIDUALMESSAGE_RECEIVER_SOCKET].split("@")[1]
 
                 # send message to the receiver socket
                 self.client_sockets[socket_to_send_message_to].send(
-                    f"{CENUM_RCV_INDIVIDUALMESSAGE}{sep}{cs.getsockname()}{sep}{message_to_send}".encode()
+                    f"{CENUM_START_OF_MESSAGE}{sep}{CENUM_RCV_INDIVIDUALMESSAGE}{sep}{msg_parts[CENUM_INDIVIDUALMESSAGE_SENDER_SOCKET]}{sep}{message_to_send}".encode()
                 )
                 continue
 
-            for key in self.client_sockets:
-                msg = msg.replace(separator_token, ": ")
-                self.client_sockets[key].send(msg.encode())
+            # for key in self.client_sockets:
+            #     msg = msg.replace(separator_token, ": ")
+            #     self.client_sockets[key].send(msg.encode())
+
+    def sendtoeveryone_user_list(self):
+        print(map(lambda x: f"{x.nickname}@{x.sockname}", self.users))
+        userlist = ";".join(map(lambda x: str(x), self.users))
+        userlist = f"{CENUM_START_OF_MESSAGE}{sep}{SENUM_USERLIST}{sep}{userlist}"
+        for key in self.client_sockets:
+            self.client_sockets[key].send(userlist.encode())
+            
+
 
     def block_for_connection(self):
         while True:
             client_socket, client_address = self.s.accept()
             print(f"[+] {client_address} connected.")
+
             # socket_stringified = str(client_socket.getsockname())
             self.client_sockets[str(client_address)] = client_socket
             t = Thread(target=self.listen_for_client, args=(client_socket,))

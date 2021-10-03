@@ -1,22 +1,129 @@
 import sys
 from PyQt5.QtWidgets import (QApplication, QHBoxLayout, QVBoxLayout, QWidget, QGridLayout, QLabel, QLineEdit, QTextEdit, QPushButton)
+from PyQt5.QtCore import (QThread, pyqtSignal)
 from constants import *
-from base import ControllerBase
+from controller_interface import ControllerBase
+from socket import socket
+import socket as socket_module
+from comm_enum import *
+
+def trap_exc_during_debug(*args):
+    # when app raises uncaught exception, print info
+    print(args)
+
+
+# install exception hook: without this, uncaught exception would cause application to exit
+sys.excepthook = trap_exc_during_debug
 
 
 WINDOW_WIDTH = 500
 WINDOW_HEIGHT = 400
-class MyApp(QWidget):
+BUFSIZE = 1024
 
-    def __init__(self, controller: ControllerBase,id="1"):
+class Worker(QThread):
+    # signals
+    signal_chat_individual = pyqtSignal(str)
+    signal_chat_group = pyqtSignal(str)
+    signal_initialize = pyqtSignal(str)
+    signal_member_added = pyqtSignal(str)
+
+    def __init__(self, socket_to_use:socket, unconnectedWidget,parent=None):
+        super(Worker, self).__init__(parent)
+        self.working = True
+        self.socket = socket_to_use
+        self.unconnectedWidget : UnconnectedWidget = unconnectedWidget
+
+
+    def __det__(self):
+        self.working = False
+        self.wait()
+
+    def run(self):
+        while True:
+            try:
+                message = self.socket.recv(BUFSIZE).decode()
+
+                # separate messages (in case there are multiple messages)
+                messages = message.split(CENUM_START_OF_MESSAGE)[1:]
+                print("[WORKER]",message)
+                
+                for m in messages:
+                    # start of message would have been gone in splition, so reappend that starting part
+                    m = f"{CENUM_START_OF_MESSAGE}{m}"
+                    print("[WORKER] Processing this message", m)
+                    # check message, then emit signal
+                    if m:
+                        msg_parts = m.split(sep)
+                        # Receive message about configuration success
+                        if msg_parts[MSG_TYPE] == CENUM_CLIENT_CONFIG:
+                            self.signal_initialize.emit(str(m))
+                        
+                        # TODO: receive message about updated list of users
+                        if msg_parts[MSG_TYPE] == SENUM_USERLIST:
+                            print("on it sir!", str(message))
+                            self.signal_member_added.emit(str(m))
+
+                        # Receive message about 1:1 message
+                        if msg_parts[MSG_TYPE] == CENUM_RCV_INDIVIDUALMESSAGE:
+                            print("[DEBUG][WORKER]:", m)
+                            # TODO: check length of msg_parts 
+                            self.signal_chat_individual.emit(str(m))
+
+                        
+                        # group message
+
+                
+
+            except Exception as e:
+                print(e)
+                break
+
+
+
+class UnconnectedWidget(QWidget):
+    def __init__(self, controller: ControllerBase):
         super().__init__()
         self.controller = controller
-        self.initUI(id)
+        self.initUI()
 
-    def initUI(self, id):
+    def onConnect(self):
+        ip_addr = self.ip_tf.text()
+        port = self.port_tf.text()
+        nickname = self.nickname_tf.text()
+        if ip_addr and port and nickname:
+            try:
+                port = int(port)
+
+                # set up socket
+                self.socket = socket(socket_module.AF_INET, socket_module.SOCK_STREAM)
+                self.socket.connect((ip_addr, port))
+                
+                self.nickname = nickname
+                # set up worker
+                self.worker = Worker(self.socket, self)
+                self.controller.setup_signal_handler(self.worker)
+                self.worker.start()
+
+                self.controller.model.socket = self.socket
+                self.controller.nickname = self.nickname
+                self.controller.model.nickname = self.nickname
+
+                # notify server about client config information
+                config_msg = f"{CENUM_START_OF_MESSAGE}{sep}{CENUM_CLIENT_CONFIG}{sep}{self.nickname}{sep}{self.socket.getsockname()}"
+                self.socket.send(config_msg.encode())
+
+            except ValueError as e:
+                self.l_status.setText("IP address should be in the correct format!")
+                print(e)
+            except ConnectionRefusedError as e:
+                self.l_status.setText("Connection Refused! Enter valid server IP address")
+                print(e)
+
+    def initUI(self):
         # make footer
         connect_btn = QPushButton("Connect", self)
-        connect_btn.clicked.connect(lambda: self.controller.changePageTo(PAGE_CONNECTED))
+        connect_btn.clicked.connect(lambda: self.onConnect())
+        
         cancel_btn = QPushButton("Cancel", self)
         cancel_btn.clicked.connect(lambda: self.controller.exitTheApp())
         hbox = QHBoxLayout()
@@ -27,15 +134,24 @@ class MyApp(QWidget):
 
         # make textfields (IP address, port, nickname)
         tf_grid = QGridLayout()
-        ip_tf = QLineEdit()
-        port_tf = QLineEdit()
-        nickname_tf = QLineEdit()
+        self.ip_tf = QLineEdit()
+        self.ip_tf.setText("127.0.0.1")
+        self.port_tf = QLineEdit()
+        self.port_tf.setText("10000")
+        self.nickname_tf = QLineEdit()
+        self.nickname_tf.setText("Hajin")
+        
         tf_grid.addWidget(QLabel('IP address: '), 0, 0)
         tf_grid.addWidget(QLabel('Port: '), 1, 0)
         tf_grid.addWidget(QLabel('Nickname: '), 2, 0)
-        tf_grid.addWidget(ip_tf, 0, 1)
-        tf_grid.addWidget(port_tf, 1, 1)
-        tf_grid.addWidget(nickname_tf, 2, 1)
+        tf_grid.addWidget(self.ip_tf, 0, 1)
+        tf_grid.addWidget(self.port_tf, 1, 1)
+        tf_grid.addWidget(self.nickname_tf, 2, 1)
+
+        # status display
+        self.l_status = QLabel("")
+        tf_grid.addWidget(self.l_status, 3, 0,1,2)
+
 
         # make container vbox
         container_vbox = QVBoxLayout()
@@ -44,7 +160,7 @@ class MyApp(QWidget):
         container_vbox.addStretch(1)
         container_vbox.addLayout(hbox)
         self.setLayout(container_vbox)
-
+        
         self.setWindowTitle('Connection Page')
         self.setGeometry(300, 300, WINDOW_WIDTH, WINDOW_HEIGHT)
         # self.show()
