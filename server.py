@@ -23,21 +23,26 @@ class User():
     def __str__(self) -> str:
         return f"{self.nickname}@{self.sockname}"
 
+class Group():
+    def __init__(self, nicksockname, room_number) -> None:
+        self.creator_nicksockname = nicksockname
+        self.room_number = room_number
+        # nicksockname of participants
+        self.participants: list[str] = []
+        pass
+
 class Server():
     def __init__(self) -> None:
         self.users = set()
         # str here refers to User#port
         self.client_sockets: dict[str, socket.socket] = {}
         self.configurate_socket()
-        pass
+        # key: group number, value: group object
+        self.groups: dict[str,Group] = {}
     
     def add_user(self, new_user: User):
         self.users.add(new_user)
 
-    # returns list of users that are connected
-    def get_connected_users(self):
-        # return list of addresses concatenated with 'sep'
-        pass
 
     def configurate_socket(self):
         self.s = socket.socket()
