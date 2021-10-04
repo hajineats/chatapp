@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import (QApplication, QHBoxLayout, QListView, QListWidget, 
 from PyQt5.QtCore import Qt
 from constants import *
 from controller_interface import ControllerBase
+from server import Group
 WINDOW_WIDTH = 500
 WINDOW_HEIGHT = 400
 
@@ -17,6 +18,8 @@ class GroupchatBox(QWidget):
         # the chat window
         self.chat_browser = None
         self.message_edit = None
+        # TODO: change current group number when you go into the page of one group chat
+        self.current_group_number = None
 
         # controller, model
         self.controller = controller
@@ -67,16 +70,23 @@ class GroupchatBox(QWidget):
             vbox.addWidget(close_btn)
             return vbox
 
+    def update_participant_list(self, group_number):
+        # TODO see if the group number is the current group number
+        if group_number is self.current_group_number:
+            self.browser_member_list.clear()
+            group:Group = self.model.get_group_by_id_groupnumber(group_number)
+            for participant in group.participants:
+                self.browser_member_list.append(participant)
 
     def initUI(self):
-        browser_member_list = QTextBrowser()
-        browser_member_list.append("Alice (host)")
-        browser_member_list.append("Bob")
-        browser_member_list.append("Craig (Me)")
+        self.browser_member_list = QTextBrowser()
+        # browser_member_list.append("Alice (host)")
+        # browser_member_list.append("Bob")
+        # browser_member_list.append("Craig (Me)")
         
         vbox_member_list = QVBoxLayout()
         vbox_member_list.addWidget(QLabel("Members"))
-        vbox_member_list.addWidget(browser_member_list)
+        vbox_member_list.addWidget(self.browser_member_list)
         vbox_member_list.addWidget(QPushButton("Invite"))
 
         hbox = QHBoxLayout()

@@ -138,7 +138,7 @@ class Server():
 
                 # send the group object (that includes list of participants) to everyone
                 msg_to_send = str(group)
-                msg_to_send = f"{CENUM_START_OF_MESSAGE}{sep}{SENUM_SOMEONEJOINEDGROUP}{sep}{msg_to_send}"
+                msg_to_send = f"{CENUM_START_OF_MESSAGE}{sep}{SENUM_SOMEONEJOINEDGROUP}{sep}{group.room_number}{sep}{msg_to_send}"
 
                 for participant_nicksock in group.participants:
                     participant_socket = self.client_sockets[participant_nicksock.split("@")[1]]

@@ -4,6 +4,7 @@ from PyQt5.QtCore import Qt
 from constants import *
 from controller_interface import ControllerBase
 from model import Model
+from alertbox import show_error_message
 WINDOW_WIDTH = 500
 WINDOW_HEIGHT = 400
 
@@ -34,6 +35,11 @@ class ConnectedWidget(QWidget):
         btn_create_group.clicked.connect(self.model.create_group)
         
         def join_group():
+            if self.selected_grouptochat is None:
+                show_error_message("Make sure to select a group to chat in")
+                return
+            # change screen to groupchat screen
+            self.controller.changePageTo(PAGE_GROUPCHAT)
             group_full_name = self.selected_grouptochat.split("@")
             creator_nickname = group_full_name[0]
             creator_sockname = group_full_name[1]
@@ -41,10 +47,8 @@ class ConnectedWidget(QWidget):
 
             # group creator nicksockname
             group_creator_nicksock = f"{creator_nickname}@{creator_sockname}"
-
+            self.controller.groupchatbox.current_group_number = group_number
             self.model.join_group(group_creator_nicksock,group_number)
-            # change screen to groupchat screen
-            self.controller.changePageTo(PAGE_GROUPCHAT)
 
         btn_join_group = QPushButton("Join", self)
         btn_join_group.clicked.connect(join_group)

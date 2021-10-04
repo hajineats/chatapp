@@ -1,9 +1,9 @@
 from abc import abstractmethod
 import sys
-from PyQt5.QtWidgets import (QApplication, QMainWindow, QStackedLayout)
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QStackedLayout, QMessageBox)
 from PyQt5.QtCore import (QThread, pyqtSignal)
 from gui_groupchat import GroupchatBox
-
+from alertbox import show_error_message
 from gui_unconnected import UnconnectedWidget, Worker
 from gui_connected import LIST_CHAT_ROOMS, LIST_CONNECTED_CLIENTS, ConnectedWidget
 from gui_frag_chatbox import ChatBox
@@ -55,12 +55,21 @@ class Controller(ControllerBase):
                 self.model.get_groups()
             )
 
+        def someone_joined_the_group(msg: str):
+            print("this is reached!")
+            # TODO: change model
+            self.model.handle_someone_joined_group(msg)
+            # TODO: update participant list in group chat window
+            self.groupchatbox.update_participant_list(msg.split(sep)[SENUM_SOMEONEJOINEDGROUP_GROUPNAME])
+            
+
         worker.signal_initialize.connect(lambda msg: moving_to_connect(msg))
         worker.signal_member_added.connect(lambda msg: self.connected.update_listview(
             LIST_CONNECTED_CLIENTS,
             msg.split(sep)[SENUM_USERLIST_USERS].split(";")))
         worker.signal_chat_individual.connect(lambda msg: someone_sent_me_message(msg))
         worker.signal_group_added.connect(lambda msg: someone_created_group(msg))
+        worker.signal_group_member_added.connect(lambda msg: someone_joined_the_group(msg))
         
 
     def changePageTo(self,index):
@@ -73,6 +82,9 @@ class Controller(ControllerBase):
             self.chatbox.setChatWith(indivtochat)
             self.chatbox.setGeometry(self.connected.geometry())
             self.changePageTo(PAGE_CHAT)
+        else:
+            show_error_message("Make sure to select a person to 1:1 chat with")
+
 
     def exitTheApp(self):
         # do cleanup, notifying the server that it finished (so other clients can be notified)

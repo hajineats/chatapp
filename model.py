@@ -64,6 +64,29 @@ class Model():
         if new_group not in self.group_chat_dict:
             self.group_chat_dict[new_group] = []
 
+    def handle_someone_joined_group(self, msg):
+        msg_parts = msg.split(sep)
+        # find the group object
+        room_number_tofind = msg_parts[SENUM_SOMEONEJOINEDGROUP_GROUPNAME]
+
+        # found group becomes non-None if the client is a participant of this group
+        found_group = None
+        for g in self.group_chat_dict:
+            if g.room_number is room_number_tofind:
+                found_group = g
+
+        # update the list of participants field of that group object
+        new_participant_list = msg_parts[SENUM_SOMEONEJOINEDGROUP_GROUPOBJECTWITHLISTOFPARTICIPANTS].split("@")[3:]
+        new_participant_list = "@".join(new_participant_list)
+        new_participant_list: list[str] = new_participant_list.split("|")
+        if found_group is not None:
+            found_group.participants = new_participant_list
+
+    def get_group_by_id_groupnumber(self, group_id) -> Group:
+        for g in self.group_chat_dict:
+            if g.room_number is group_id:
+                return g
+
     def get_groups(self):
         if not self.group_chat_dict:
             return []

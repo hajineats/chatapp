@@ -25,8 +25,12 @@ class Worker(QThread):
     signal_chat_individual = pyqtSignal(str)
     signal_chat_group = pyqtSignal(str)
     signal_initialize = pyqtSignal(str)
+    # this is when a new person connects to the server (not to a group)
     signal_member_added = pyqtSignal(str)
+    # this is when group is created
     signal_group_added = pyqtSignal(str)
+    # this is when a person joins a group
+    signal_group_member_added = pyqtSignal(str)
 
     def __init__(self, socket_to_use:socket, unconnectedWidget,parent=None):
         super(Worker, self).__init__(parent)
@@ -72,6 +76,10 @@ class Worker(QThread):
                         # Receive message about new group
                         if msg_parts[MSG_TYPE] == SENUM_GROUPCREATED:
                             self.signal_group_added.emit(str(m))
+
+                        # someone joined the group
+                        if msg_parts[MSG_TYPE] == SENUM_SOMEONEJOINEDGROUP:
+                            self.signal_group_member_added.emit(str(m))
 
 
                         # group message
