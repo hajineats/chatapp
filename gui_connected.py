@@ -34,11 +34,20 @@ class ConnectedWidget(QWidget):
         btn_create_group.clicked.connect(self.model.create_group)
         
         def join_group():
-            self.model.join_group()
+            group_full_name = self.selected_grouptochat.split("@")
+            creator_nickname = group_full_name[0]
+            creator_sockname = group_full_name[1]
+            group_number = group_full_name[2]
+
+            # group creator nicksockname
+            group_creator_nicksock = f"{creator_nickname}@{creator_sockname}"
+
+            self.model.join_group(group_creator_nicksock,group_number)
             # change screen to groupchat screen
+            self.controller.changePageTo(PAGE_GROUPCHAT)
 
         btn_join_group = QPushButton("Join", self)
-        btn_join_group.clicked.connect(self.model.join_group)
+        btn_join_group.clicked.connect(join_group)
         
         
         vbox.addWidget(btn_create_group)
@@ -90,7 +99,7 @@ class ConnectedWidget(QWidget):
         # define callbacks for clicking item
         def select_group():
             print("[LISTVIEW, select group]:", new_list_widget.currentItem().text())
-            self.selected_indivtochat = new_list_widget.currentItem().text()
+            self.selected_grouptochat = new_list_widget.currentItem().text()
 
         def select_individual():
             print("[LISTVIEW, select individual]:", new_list_widget.currentItem().text())

@@ -50,7 +50,7 @@ class Server():
         self.client_sockets: dict[str, socket.socket] = {}
         self.configurate_socket()
         # key: group number, value: group object
-        self.groups: dict[str,Group] = {}
+        self.groups: dict[int,Group] = {}
         self.group_number = 0
     
     def add_user(self, new_user: User):
@@ -114,7 +114,8 @@ class Server():
                 # create a group object and change server state
                 new_group = Group(msg_parts[CENUM_CREATEGROUP_CREATORNICKSOCK], self.group_number)
                 self.groups[self.group_number] = new_group
-                
+                # print("DEBUG", self.group_number)
+                # print("DBUG", new_group)
                 # create a senum message to broadcast to everyone
                 grouplist = ";".join(map(lambda x: str(x), self.groups.values()))
                 grouplist = f"{CENUM_START_OF_MESSAGE}{sep}{SENUM_GROUPCREATED}{sep}{msg_parts[CENUM_CREATEGROUP_CREATORNICKSOCK]}{sep}{self.group_number}"
@@ -124,8 +125,24 @@ class Server():
 
                 # increment group number
                 self.group_number = self.group_number + 1
+
+            # client says I want to join a group
+            if msg_parts[MSG_TYPE] == CENUM_JOINGROUP:
+                for g in self.groups:
+                    print("[DEBUG]", g)
+                # find the group with group number
+                group: Group = self.groups[int(msg_parts[CENUM_JOINGROUP_GROUPNAME])]
                 
-                
+                # add him as a participant
+                group.participants.append(msg_parts[CENUM_JOINGROUP_JOINERNICKSOCK])
+
+                # send the group object (that includes list of participants) to everyone
+                msg_to_send = str(group)
+                msg_to_send = f"{CENUM_START_OF_MESSAGE}{sep}{SENUM_SOMEONEJOINEDGROUP}{sep}{msg_to_send}"
+
+                for participant_nicksock in group.participants:
+                    participant_socket = self.client_sockets[participant_nicksock.split("@")[1]]
+                    participant_socket.send(msg_to_send.encode())
 
 
             # for key in self.client_sockets:

@@ -51,7 +51,7 @@ CENUM_JOINGROUP_JOINERNICKSOCK = 4
 # server lets everyone know that a new client joined (by sending the updated list of participants)
 SENUM_SOMEONEJOINEDGROUP_len = 3
 SENUM_SOMEONEJOINEDGROUP = "SOMEONE_JOINED_THE_GROUP"
-SENUM_SOMEONEJOINEDGROUP_LISTOFUSERS = 2
+SENUM_SOMEONEJOINEDGROUP_GROUPOBJECTWITHLISTOFPARTICIPANTS = 2
 
 # client sends a group message (server relays this message)
 CENUM_GROUPMESSAGE_len = 5
