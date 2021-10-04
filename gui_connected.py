@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import (QApplication, QHBoxLayout, QListView, QListWidget, 
 from PyQt5.QtCore import Qt
 from constants import *
 from controller_interface import ControllerBase
+from model import Model
 WINDOW_WIDTH = 500
 WINDOW_HEIGHT = 400
 
@@ -16,9 +17,12 @@ class ConnectedWidget(QWidget):
         self.selected_indivtochat = None
         self.selected_grouptochat = None
         self.controller = controller
-        self.model = self.controller.model
-        self.connected_clients_list = ["lol huh", "huhhh"]
-        self.chat_rooms_list = ["aw", "wa"]
+        self.model: Model = self.controller.model
+        self.datalist = [[],[]]
+        # self.datalist[LIST_CONNECTED_CLIENTS] = []
+        # self.datalist[LIST_CHAT_ROOMS] = []
+        # self.connected_clients_list = []
+        # self.chat_rooms_list = []
         self.make_two_lists()
         self.initUI()
 
@@ -27,12 +31,18 @@ class ConnectedWidget(QWidget):
         # vbox{create, join}
         vbox = QVBoxLayout()
         btn_create_group = QPushButton("Create", self)
-        def create_group():
-            self.model.create_group()
+        btn_create_group.clicked.connect(self.model.create_group)
+        
+        def join_group():
+            self.model.join_group()
+            # change screen to groupchat screen
 
-        btn_create_group.clicked.connect(create_group)
+        btn_join_group = QPushButton("Join", self)
+        btn_join_group.clicked.connect(self.model.join_group)
+        
+        
         vbox.addWidget(btn_create_group)
-        vbox.addWidget(QPushButton("Join", self))
+        vbox.addWidget(btn_join_group)
         
         
         self.grid = QGridLayout()
@@ -67,15 +77,35 @@ class ConnectedWidget(QWidget):
     def make_two_lists(self):
         # initialize two lists
         self.listview = [None, None]        
-        self.listview[LIST_CONNECTED_CLIENTS] = self.generate_list_widget(self.connected_clients_list)
-        self.listview[LIST_CHAT_ROOMS] = self.generate_list_widget(self.chat_rooms_list)
+        self.listview[LIST_CONNECTED_CLIENTS] = self.generate_list_widget(self.datalist[LIST_CONNECTED_CLIENTS])
+        self.listview[LIST_CHAT_ROOMS] = self.generate_list_widget(self.datalist[LIST_CHAT_ROOMS])
 
     def update_listview(self, list_index, new_list):
         print("i'm here!")
         print(new_list)
-        self.listview[list_index] = self.generate_list_widget(new_list)
-        self.listview[list_index].scrollToBottom()
+        self.datalist[list_index] = new_list
+        new_list_widget = self.generate_list_widget(new_list)
+        self.listview[list_index] = new_list_widget
+
+        # define callbacks for clicking item
+        def select_group():
+            print("[LISTVIEW, select group]:", new_list_widget.currentItem().text())
+            self.selected_indivtochat = new_list_widget.currentItem().text()
+
+        def select_individual():
+            print("[LISTVIEW, select individual]:", new_list_widget.currentItem().text())
+            self.selected_indivtochat = new_list_widget.currentItem().text()
+
+
+        if list_index is LIST_CHAT_ROOMS:
+            # assign callback to set group to chat
+            new_list_widget.clicked.connect(select_group)
+        
+        if list_index is LIST_CONNECTED_CLIENTS:
+            new_list_widget.clicked.connect(select_individual)
+
         self.grid.addWidget(self.listview[list_index],2*list_index+1,0)
+        self.listview[list_index].scrollToBottom()
 
 
     def generate_list_widget(self, with_items):
@@ -85,12 +115,12 @@ class ConnectedWidget(QWidget):
         for i, v in enumerate(with_items):
             list_widget.insertItem(i, v)
         
-        def select_item():
-            selected_text =list_widget.currentItem().text()
-            self.selected_indivtochat = selected_text
-            print("[LISTVIEW]",selected_text)
+        # def select_item():
+        #     selected_text =list_widget.currentItem().text()
+        #     self.selected_indivtochat = selected_text
+        #     print("[LISTVIEW]",selected_text)
 
-        list_widget.clicked.connect(lambda: select_item())
+        # list_widget.clicked.connect(lambda: select_item())
         return list_widget
     
     

@@ -49,6 +49,10 @@ class Model():
         msg_to_send = f"{CENUM_START_OF_MESSAGE}{sep}{CENUM_CREATEGROUP}{sep}{self.get_my_nicksockname()}"
         self.socket.send(msg_to_send.encode())
 
+    # message is sent from the client that he joined the group
+    def join_group(self, group_creator_nicksock, group_id):
+        msg_to_send = f"{CENUM_START_OF_MESSAGE}{sep}{CENUM_JOINGROUP}{sep}{group_creator_nicksock}{sep}{group_id}{sep}{self.get_my_nicksockname()}"
+        self.socket.send(msg_to_send.encode())
 
     # client (that didn't create the group) receives this message and updates it to its list
     def handle_group_creation(self, msg):
