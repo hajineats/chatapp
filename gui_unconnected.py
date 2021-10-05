@@ -81,8 +81,9 @@ class Worker(QThread):
                         if msg_parts[MSG_TYPE] == SENUM_SOMEONEJOINEDGROUP:
                             self.signal_group_member_added.emit(str(m))
 
-
-                        # group message
+                        # someone sent a group message
+                        if msg_parts[MSG_TYPE] == CENUM_GROUPMESSAGE:
+                            self.signal_chat_group.emit(str(m))
 
                 
 

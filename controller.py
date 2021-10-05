@@ -61,7 +61,10 @@ class Controller(ControllerBase):
             self.model.handle_someone_joined_group(msg)
             # TODO: update participant list in group chat window
             self.groupchatbox.update_participant_list(msg.split(sep)[SENUM_SOMEONEJOINEDGROUP_GROUPNAME])
-            
+        
+        def someone_sent_a_groupmessage(msg: str):
+            self.model.handle_broadcasted_group_message(msg)
+            self.groupchatbox.update_messagelist()
 
         worker.signal_initialize.connect(lambda msg: moving_to_connect(msg))
         worker.signal_member_added.connect(lambda msg: self.connected.update_listview(
@@ -70,6 +73,7 @@ class Controller(ControllerBase):
         worker.signal_chat_individual.connect(lambda msg: someone_sent_me_message(msg))
         worker.signal_group_added.connect(lambda msg: someone_created_group(msg))
         worker.signal_group_member_added.connect(lambda msg: someone_joined_the_group(msg))
+        worker.signal_chat_group.connect(lambda msg: someone_sent_a_groupmessage(msg))
         
 
     def changePageTo(self,index):

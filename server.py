@@ -144,6 +144,17 @@ class Server():
                     participant_socket = self.client_sockets[participant_nicksock.split("@")[1]]
                     participant_socket.send(msg_to_send.encode())
 
+            # someone broadcasted a message to a group
+            if msg_parts[MSG_TYPE] == CENUM_GROUPMESSAGE:
+                
+                # find the group with group number
+                group: Group = self.groups[int(msg_parts[CENUM_GROUPMESSAGE_GROUPNAME])]
+                
+                # relay the exact same message to everyone in the group
+                for participant_nicksock in group.participants:
+                    participant_socket = self.client_sockets[participant_nicksock.split("@")[1]]
+                    participant_socket.send(msg.encode())
+
 
             # for key in self.client_sockets:
             #     msg = msg.replace(separator_token, ": ")

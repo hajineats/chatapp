@@ -28,6 +28,19 @@ class Model():
         self.indiv_chat_dict[sockname].append(message)
         print("---")
 
+    def broadcast_a_group_message(self, groupname,message):
+        msg_to_send = f"{CENUM_START_OF_MESSAGE}{sep}{CENUM_GROUPMESSAGE}{sep}{groupname}{sep}{self.get_my_nicksockname()}{sep}{message}"
+        self.socket.send(msg_to_send.encode())
+
+    def handle_broadcasted_group_message(self, msg):
+        msg_parts = msg.split(sep)
+        # add it to cache
+        group_name = msg_parts[CENUM_GROUPMESSAGE_GROUPNAME]
+        message_sent = msg_parts[CENUM_GROUPMESSAGE_MESSAGE]
+        group: Group = self.get_group_by_id_groupnumber(group_name)
+        if group is not None:
+            self.group_chat_dict[group].append(message_sent)
+
     def add_remote_indiv_message(self, sockname: str, message):
         # is this a new message?
         if sockname not in self.indiv_chat_dict:
@@ -83,9 +96,11 @@ class Model():
             found_group.participants = new_participant_list
 
     def get_group_by_id_groupnumber(self, group_id) -> Group:
+        found = None
         for g in self.group_chat_dict:
             if g.room_number is group_id:
-                return g
+                found = g
+        return found
 
     def get_groups(self):
         if not self.group_chat_dict:

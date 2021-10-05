@@ -28,11 +28,10 @@ class GroupchatBox(QWidget):
         self.initUI()
 
     # refresh the chat
-    def setChatWith(self, others_sockname):
-        self.chatting_entity = others_sockname
+    def update_messagelist(self):
         self.chat_browser.clear()
 
-        msg_list: list[str] = self.model.get_indiv_message(self.chatting_entity)
+        msg_list: list[str] = self.model.group_chat_dict[self.model.get_group_by_id_groupnumber(self.current_group_number)]
         for msg in msg_list:
             self.chat_browser.append(msg)
 
@@ -44,8 +43,10 @@ class GroupchatBox(QWidget):
 
             def send_message():
                 # send message
-                self.model.add_indiv_message(self.chatting_entity, self.message_edit.text())
-                self.setChatWith(self.chatting_entity)
+                self.model.broadcast_a_group_message(self.current_group_number,self.message_edit.text())
+                self.update_messagelist()
+                # self.model.add_indiv_message(self.chatting_entity, self.message_edit.text())
+                # self.setChatWith(self.chatting_entity)
 
             send_btn = QPushButton("Send", self)
             send_btn.clicked.connect(send_message)
