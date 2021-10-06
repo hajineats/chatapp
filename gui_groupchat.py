@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import (QApplication, QHBoxLayout, QListView, QListWidget, 
 from PyQt5.QtCore import Qt
 from constants import *
 from controller_interface import ControllerBase
+from gui_invite import InviteDialog
 from server import Group
 WINDOW_WIDTH = 500
 WINDOW_HEIGHT = 400
@@ -88,7 +89,19 @@ class GroupchatBox(QWidget):
         vbox_member_list = QVBoxLayout()
         vbox_member_list.addWidget(QLabel("Members"))
         vbox_member_list.addWidget(self.browser_member_list)
-        vbox_member_list.addWidget(QPushButton("Invite"))
+        btn_invite = QPushButton("Invite")
+        vbox_member_list.addWidget(btn_invite)
+
+        def invite_selected(nicksock_name):
+            print(nicksock_name)
+            pass
+        def popup_invite_dialog():
+            invite_dialog = InviteDialog(self, self.controller, None, self.current_group_number)
+            invite_dialog.show()
+            pass
+
+        btn_invite.clicked.connect(popup_invite_dialog)
+
 
         hbox = QHBoxLayout()
         hbox.addLayout(self.createChatWindow())

@@ -4,6 +4,7 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QStackedLayout, QMessage
 from PyQt5.QtCore import (QThread, pyqtSignal)
 from gui_groupchat import GroupchatBox
 from alertbox import show_error_message
+from gui_invite import InviteDialog
 from gui_unconnected import UnconnectedWidget, Worker
 from gui_connected import LIST_CHAT_ROOMS, LIST_CONNECTED_CLIENTS, ConnectedWidget
 from gui_frag_chatbox import ChatBox
@@ -24,12 +25,12 @@ class Controller(ControllerBase):
         self.groupchatbox = GroupchatBox(self)
         self.pages = [self.unconnected,self.connected,self.chatbox, self.groupchatbox]
 
-
         self.stack = QStackedLayout()
         self.stack.addWidget(self.pages[PAGE_UNCONNECTED])
         self.stack.addWidget(self.pages[PAGE_CONNECTED])
         self.stack.addWidget(self.pages[PAGE_CHAT])
         self.stack.addWidget(self.pages[PAGE_GROUPCHAT])
+
         self.stack.setCurrentIndex(PAGE_UNCONNECTED)
         pass
 
@@ -66,10 +67,19 @@ class Controller(ControllerBase):
             self.model.handle_broadcasted_group_message(msg)
             self.groupchatbox.update_messagelist()
 
+        def someone_joined_the_app(msg):
+            user_list = msg.split(sep)[SENUM_USERLIST_USERS].split(";")
+            for user in user_list:
+                if user not in self.model.indiv_chat_dict:
+                    self.model.indiv_chat_dict[user] = []
+
+            self.connected.update_listview(
+                LIST_CONNECTED_CLIENTS,
+                user_list
+            )
+
         worker.signal_initialize.connect(lambda msg: moving_to_connect(msg))
-        worker.signal_member_added.connect(lambda msg: self.connected.update_listview(
-            LIST_CONNECTED_CLIENTS,
-            msg.split(sep)[SENUM_USERLIST_USERS].split(";")))
+        worker.signal_member_added.connect(lambda msg: someone_joined_the_app(msg))
         worker.signal_chat_individual.connect(lambda msg: someone_sent_me_message(msg))
         worker.signal_group_added.connect(lambda msg: someone_created_group(msg))
         worker.signal_group_member_added.connect(lambda msg: someone_joined_the_group(msg))
