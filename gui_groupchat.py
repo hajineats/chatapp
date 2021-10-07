@@ -92,11 +92,8 @@ class GroupchatBox(QWidget):
         btn_invite = QPushButton("Invite")
         vbox_member_list.addWidget(btn_invite)
 
-        def invite_selected(nicksock_name):
-            print(nicksock_name)
-            pass
         def popup_invite_dialog():
-            invite_dialog = InviteDialog(self, self.controller, None, self.current_group_number)
+            invite_dialog = InviteDialog(self, self.controller, self.current_group_number)
             invite_dialog.show()
             pass
 

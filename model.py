@@ -64,6 +64,8 @@ class Model():
 
     # message is sent from the client that he joined the group
     def join_group(self, group_creator_nicksock, group_id):
+        if group_creator_nicksock is None:
+            group_creator_nicksock = "empty"
         msg_to_send = f"{CENUM_START_OF_MESSAGE}{sep}{CENUM_JOINGROUP}{sep}{group_creator_nicksock}{sep}{group_id}{sep}{self.get_my_nicksockname()}"
         self.socket.send(msg_to_send.encode())
 
@@ -107,10 +109,17 @@ class Model():
             return []
         return map(lambda x: str(x), self.group_chat_dict.keys())
 
+
+    def send_group_invitation_to_nicksock(self, groupname, invitee_nicksock):
+        msg_to_send = f"{CENUM_START_OF_MESSAGE}{sep}{CENUM_GROUPINVITATION}{sep}{groupname}{sep}{self.get_my_nicksockname()}{sep}{invitee_nicksock}"
+        self.socket.send(msg_to_send.encode())
+
     def add_group_message(self):
         pass
 
     def add_remote_group_message(self):
         pass
+
+
 
     

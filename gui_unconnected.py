@@ -31,6 +31,8 @@ class Worker(QThread):
     signal_group_added = pyqtSignal(str)
     # this is when a person joins a group
     signal_group_member_added = pyqtSignal(str)
+    # this is when you get a groupchat invitation
+    signal_groupchat_invitation = pyqtSignal(str)
 
     def __init__(self, socket_to_use:socket, unconnectedWidget,parent=None):
         super(Worker, self).__init__(parent)
@@ -84,6 +86,9 @@ class Worker(QThread):
                         # someone sent a group message
                         if msg_parts[MSG_TYPE] == CENUM_GROUPMESSAGE:
                             self.signal_chat_group.emit(str(m))
+
+                        if msg_parts[MSG_TYPE] == CENUM_GROUPINVITATION:
+                            self.signal_groupchat_invitation.emit(str(m))
 
                 
 

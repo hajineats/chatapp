@@ -9,13 +9,14 @@ WINDOW_WIDTH = 500
 WINDOW_HEIGHT = 400
 
 class InviteDialog(QDialog):
-    def __init__(self, parent, controller: ControllerBase, cb, current_group_number):
+    def __init__(self, parent, controller: ControllerBase, current_group_number):
         super().__init__(parent)
         self.controller = controller
         self.model: Model = controller.model
         self.current_group_number = current_group_number
         self.initUI()
         self.invitable_listview = None
+        self.invitee = None
 
         # self.model = model
 
@@ -30,11 +31,11 @@ class InviteDialog(QDialog):
                 invitable_ppl.append(person)
         
         self.invitable_listview.addItems(invitable_ppl)
-        self.invitable_listview.itemClicked.connect(lambda x: print(x.text()))
 
-
-        pass
-        # self.model.getListOfThoseNotInGroupchat()
+        def handle_invitee_click(invitee):
+            self.invitee = invitee
+        
+        self.invitable_listview.itemClicked.connect(lambda x: handle_invitee_click(x.text()))
 
     def initUI(self):
         vbox = QVBoxLayout()
@@ -46,6 +47,12 @@ class InviteDialog(QDialog):
 
         hbox = QHBoxLayout()
         btn_invite = QPushButton("Invite")
+
+        def invite_someone():
+            print("[INVITEDIALOG]", self.invitee)
+            self.model.send_group_invitation_to_nicksock(self.current_group_number, self.invitee)
+
+        btn_invite.clicked.connect(lambda: invite_someone())
         
         btn_cancel = QPushButton("Cancel")
         hbox.addWidget(btn_invite)
@@ -56,6 +63,7 @@ class InviteDialog(QDialog):
         self.setLayout(vbox)
         self.setWindowTitle('Connection Page')
         self.setGeometry(300, 300, 200, WINDOW_HEIGHT)
+
 
 
 # class MainWindow(QWidget):

@@ -1,6 +1,6 @@
 from abc import abstractmethod
 import sys
-from PyQt5.QtWidgets import (QApplication, QMainWindow, QStackedLayout, QMessageBox)
+from PyQt5.QtWidgets import (QApplication, QDialog, QDialogButtonBox, QMainWindow, QPushButton, QStackedLayout, QMessageBox, QLabel, QVBoxLayout, QHBoxLayout, QWidget)
 from PyQt5.QtCore import (QThread, pyqtSignal)
 from gui_groupchat import GroupchatBox
 from alertbox import show_error_message
@@ -69,6 +69,7 @@ class Controller(ControllerBase):
 
         def someone_joined_the_app(msg):
             user_list = msg.split(sep)[SENUM_USERLIST_USERS].split(";")
+
             for user in user_list:
                 if user not in self.model.indiv_chat_dict:
                     self.model.indiv_chat_dict[user] = []
@@ -78,12 +79,18 @@ class Controller(ControllerBase):
                 user_list
             )
 
+        def someone_invited_me_to_a_group(msg):
+            # show a dialog, asking whether I want to join
+            invitation_dialog = InvitationAcceptDeclineDialog(self.connected,self,msg)
+            invitation_dialog.show()
+
         worker.signal_initialize.connect(lambda msg: moving_to_connect(msg))
         worker.signal_member_added.connect(lambda msg: someone_joined_the_app(msg))
         worker.signal_chat_individual.connect(lambda msg: someone_sent_me_message(msg))
         worker.signal_group_added.connect(lambda msg: someone_created_group(msg))
         worker.signal_group_member_added.connect(lambda msg: someone_joined_the_group(msg))
         worker.signal_chat_group.connect(lambda msg: someone_sent_a_groupmessage(msg))
+        worker.signal_groupchat_invitation.connect(lambda msg: someone_invited_me_to_a_group(msg))
         
 
     def changePageTo(self,index):
@@ -108,11 +115,51 @@ class Controller(ControllerBase):
         return self.model
 
 
+class InvitationAcceptDeclineDialog(QDialog):
+    def __init__(self, parent, controller: ControllerBase, msg):
+        super().__init__(parent)
+        # this message corresponds to the invitation message sent by another client
+        self.msg: str = msg
+        self.controller: Controller = controller
+        self.model : Model= controller.model
+        self.initUI()
+
+    def initUI(self):
+        vbox = QVBoxLayout()
+        vbox.addWidget(QLabel("You are invited"))
+
+        hbox = QHBoxLayout()
+        btn_accept = QPushButton("Accept")
+        btn_decline = QPushButton("Decline")
+
+        def handle_accept():
+            # handle a message from another client
+            msg_parts = self.msg.split(sep)
+            groupname = msg_parts[CENUM_GROUPINVITATION_GROUPNAME]
+            self.hide()
+            self.controller.changePageTo(PAGE_GROUPCHAT)
+            self.controller.groupchatbox.current_group_number = groupname
+            self.model.join_group(None, groupname)
+    
+        btn_accept.clicked.connect(lambda: handle_accept())
+        btn_decline.clicked.connect(lambda: self.hide())
+        hbox.addWidget(btn_accept)
+        hbox.addWidget(btn_decline)
+
+        vbox.addLayout(hbox)
+        
+        self.setLayout(vbox)
+        self.setWindowTitle('Connection Page')
+        self.setGeometry(300, 300, 200, 200)
+
+
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
+
     controller = Controller()
     mainwindow = QMainWindow()
     mainwindow.setLayout(controller.stack)
-    
+
     sys.exit(app.exec_())
 

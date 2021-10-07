@@ -155,6 +155,11 @@ class Server():
                     participant_socket = self.client_sockets[participant_nicksock.split("@")[1]]
                     participant_socket.send(msg.encode())
 
+            if msg_parts[MSG_TYPE] == CENUM_GROUPINVITATION:
+                # relay this invitation message to the invitee client
+                invitee_socket = self.client_sockets[msg_parts[CENUM_GROUPINVITATION_INVITEE_NICKSOCK].split("@")[1]]
+                invitee_socket.send(msg.encode())
+
 
             # for key in self.client_sockets:
             #     msg = msg.replace(separator_token, ": ")
