@@ -189,8 +189,8 @@ class Server():
     def block_for_connection(self):
         while True:
             client_socket, client_address = self.s.accept()
-            client_socket = self.context.wrap_socket(client_socket, server_side=True)
-            print("SSL established. Peer: {}".format(client_socket.getpeercert()))
+            conn = self.context.wrap_socket(client_socket, server_side=True)
+            print("SSL established. Peer: {}".format(conn.getpeercert()))
 
             print(f"[+] {client_address} connected.")
 
@@ -210,7 +210,6 @@ class Server():
 
 
 if __name__ == '__main__':
-    server:Server = None
     try:
         server = Server()
         server.block_for_connection()

@@ -6,6 +6,7 @@ from controller_interface import ControllerBase
 from socket import socket
 import socket as socket_module
 from comm_enum import *
+import ssl
 
 def trap_exc_during_debug(*args):
     # when app raises uncaught exception, print info
@@ -113,8 +114,19 @@ class UnconnectedWidget(QWidget):
                 port = int(port)
 
                 # set up socket
-                self.socket = socket(socket_module.AF_INET, socket_module.SOCK_STREAM)
+                server_sni_hostname = 'hi.com'
+                server_cert = 'server.crt'
+                client_cert = 'client.crt'
+                client_key = 'client.key'
+                context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH, cafile=server_cert)
+                context.load_cert_chain(certfile=client_cert, keyfile=client_key)
+                print("hi")
+                non_ssl_socket = socket_module.socket(socket_module.AF_INET, socket_module.SOCK_STREAM)
+                print('hello')
+                self.socket = context.wrap_socket(non_ssl_socket, server_side=False, server_hostname=server_sni_hostname)
                 self.socket.connect((ip_addr, port))
+                print("SSL established. Peer: {}".format(self.socket.getpeercert()))
+
                 
                 self.nickname = nickname
                 # set up worker
