@@ -25,13 +25,20 @@ class Worker(QThread):
     signal_chat_individual = pyqtSignal(str)
     signal_chat_group = pyqtSignal(str)
     signal_initialize = pyqtSignal(str)
+    # this is when a new person connects to the server (not to a group)
     signal_member_added = pyqtSignal(str)
+    # this is when group is created
+    signal_group_added = pyqtSignal(str)
+    # this is when a person joins a group
+    signal_group_member_added = pyqtSignal(str)
+    # this is when you get a groupchat invitation
+    signal_groupchat_invitation = pyqtSignal(str)
 
     def __init__(self, socket_to_use:socket, unconnectedWidget,parent=None):
         super(Worker, self).__init__(parent)
         self.working = True
         self.socket = socket_to_use
-        self.unconnectedWidget : UnconnectedWidget = unconnectedWidget
+        self.unconnectedWidget = unconnectedWidget
 
 
     def __det__(self):
@@ -65,12 +72,23 @@ class Worker(QThread):
 
                         # Receive message about 1:1 message
                         if msg_parts[MSG_TYPE] == CENUM_RCV_INDIVIDUALMESSAGE:
-                            print("[DEBUG][WORKER]:", m)
                             # TODO: check length of msg_parts 
                             self.signal_chat_individual.emit(str(m))
 
-                        
-                        # group message
+                        # Receive message about new group
+                        if msg_parts[MSG_TYPE] == SENUM_GROUPCREATED:
+                            self.signal_group_added.emit(str(m))
+
+                        # someone joined the group
+                        if msg_parts[MSG_TYPE] == SENUM_SOMEONEJOINEDGROUP:
+                            self.signal_group_member_added.emit(str(m))
+
+                        # someone sent a group message
+                        if msg_parts[MSG_TYPE] == CENUM_GROUPMESSAGE:
+                            self.signal_chat_group.emit(str(m))
+
+                        if msg_parts[MSG_TYPE] == CENUM_GROUPINVITATION:
+                            self.signal_groupchat_invitation.emit(str(m))
 
                 
 

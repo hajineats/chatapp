@@ -23,21 +23,39 @@ class User():
     def __str__(self) -> str:
         return f"{self.nickname}@{self.sockname}"
 
+class Group():
+    def __init__(self, nicksockname="", room_number="") -> None:
+        self.creator_nicksockname = nicksockname
+        self.room_number = room_number
+        # nicksockname of participants
+        self.participants: list[str] = []
+        pass
+
+    def __hash__(self) -> int:
+        return hash(self.room_number)
+    
+    def __eq__(self, o: object) -> bool:
+        if isinstance(o, Group):
+            return self.room_number==o.room_number
+        return False
+
+    def __str__(self) -> str:
+        participants_concat = "|".join(self.participants)
+        return f"{self.creator_nicksockname}@{self.room_number}@{participants_concat}"
+
 class Server():
     def __init__(self) -> None:
         self.users = set()
         # str here refers to User#port
         self.client_sockets: dict[str, socket.socket] = {}
         self.configurate_socket()
-        pass
+        # key: group number, value: group object
+        self.groups: dict[int,Group] = {}
+        self.group_number = 0
     
     def add_user(self, new_user: User):
         self.users.add(new_user)
 
-    # returns list of users that are connected
-    def get_connected_users(self):
-        # return list of addresses concatenated with 'sep'
-        pass
 
     def configurate_socket(self):
         self.s = socket.socket()
@@ -90,6 +108,59 @@ class Server():
                 )
                 continue
 
+            msg_parts = msg.split(sep)
+            # client sends a message to create a group
+            if msg_parts[MSG_TYPE] == CENUM_CREATEGROUP:
+                # create a group object and change server state
+                new_group = Group(msg_parts[CENUM_CREATEGROUP_CREATORNICKSOCK], self.group_number)
+                self.groups[self.group_number] = new_group
+                # print("DEBUG", self.group_number)
+                # print("DBUG", new_group)
+                # create a senum message to broadcast to everyone
+                grouplist = ";".join(map(lambda x: str(x), self.groups.values()))
+                grouplist = f"{CENUM_START_OF_MESSAGE}{sep}{SENUM_GROUPCREATED}{sep}{msg_parts[CENUM_CREATEGROUP_CREATORNICKSOCK]}{sep}{self.group_number}"
+                for key in self.client_sockets:
+                    self.client_sockets[key].send(grouplist.encode())
+
+
+                # increment group number
+                self.group_number = self.group_number + 1
+
+            # client says I want to join a group
+            if msg_parts[MSG_TYPE] == CENUM_JOINGROUP:
+                for g in self.groups:
+                    print("[DEBUG]", g)
+                # find the group with group number
+                group: Group = self.groups[int(msg_parts[CENUM_JOINGROUP_GROUPNAME])]
+                
+                # add him as a participant
+                group.participants.append(msg_parts[CENUM_JOINGROUP_JOINERNICKSOCK])
+
+                # send the group object (that includes list of participants) to everyone
+                msg_to_send = str(group)
+                msg_to_send = f"{CENUM_START_OF_MESSAGE}{sep}{SENUM_SOMEONEJOINEDGROUP}{sep}{group.room_number}{sep}{msg_to_send}"
+
+                for participant_nicksock in group.participants:
+                    participant_socket = self.client_sockets[participant_nicksock.split("@")[1]]
+                    participant_socket.send(msg_to_send.encode())
+
+            # someone broadcasted a message to a group
+            if msg_parts[MSG_TYPE] == CENUM_GROUPMESSAGE:
+                
+                # find the group with group number
+                group: Group = self.groups[int(msg_parts[CENUM_GROUPMESSAGE_GROUPNAME])]
+                
+                # relay the exact same message to everyone in the group
+                for participant_nicksock in group.participants:
+                    participant_socket = self.client_sockets[participant_nicksock.split("@")[1]]
+                    participant_socket.send(msg.encode())
+
+            if msg_parts[MSG_TYPE] == CENUM_GROUPINVITATION:
+                # relay this invitation message to the invitee client
+                invitee_socket = self.client_sockets[msg_parts[CENUM_GROUPINVITATION_INVITEE_NICKSOCK].split("@")[1]]
+                invitee_socket.send(msg.encode())
+
+
             # for key in self.client_sockets:
             #     msg = msg.replace(separator_token, ": ")
             #     self.client_sockets[key].send(msg.encode())
@@ -100,7 +171,7 @@ class Server():
         userlist = f"{CENUM_START_OF_MESSAGE}{sep}{SENUM_USERLIST}{sep}{userlist}"
         for key in self.client_sockets:
             self.client_sockets[key].send(userlist.encode())
-            
+    
 
 
     def block_for_connection(self):
