@@ -82,6 +82,7 @@ class Controller(ControllerBase):
         def someone_invited_me_to_a_group(msg):
             # show a dialog, asking whether I want to join
             invitation_dialog = InvitationAcceptDeclineDialog(self.connected,self,msg)
+            invitation_dialog.setGeometry(self.connected.geometry())
             invitation_dialog.show()
 
         worker.signal_initialize.connect(lambda msg: moving_to_connect(msg))
@@ -126,7 +127,9 @@ class InvitationAcceptDeclineDialog(QDialog):
 
     def initUI(self):
         vbox = QVBoxLayout()
-        vbox.addWidget(QLabel("You are invited"))
+        msg_parts = self.msg.split(sep)
+        vbox.addWidget(QLabel(f"You are invited to a group with id: {msg_parts[CENUM_GROUPINVITATION_GROUPNAME]}"))
+        vbox.addWidget(QLabel(f"Invitor: {msg_parts[CENUM_GROUPINVITATION_INVITER_NICKSOCK]}"))
 
         hbox = QHBoxLayout()
         btn_accept = QPushButton("Accept")

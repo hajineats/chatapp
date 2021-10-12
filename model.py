@@ -1,10 +1,12 @@
 from socket import socket
+from datetime import datetime
 from comm_enum import *
 from server import Group
 class Model():
     def __init__(self) -> None:
         self.socket :socket = None
 
+        # sockname to nickname
 
         # for 1:1 chat. key is sockname (recipient), list is the list of messages
         self.indiv_chat_dict: dict[str, list[str]] = {}
@@ -25,7 +27,9 @@ class Model():
         if sockname not in self.indiv_chat_dict:
             self.indiv_chat_dict[sockname] = []
         print("[DEBUG][MODEL]:",self.indiv_chat_dict[sockname])
-        self.indiv_chat_dict[sockname].append(message)
+
+        time = f"{datetime.now().hour}:{datetime.now().minute}"
+        self.indiv_chat_dict[sockname].append(f"[Me] {self.get_my_nicksockname().split('@')[0]} ({time}): {message}")
         print("---")
 
     def broadcast_a_group_message(self, groupname,message):
@@ -38,15 +42,23 @@ class Model():
         group_name = msg_parts[CENUM_GROUPMESSAGE_GROUPNAME]
         message_sent = msg_parts[CENUM_GROUPMESSAGE_MESSAGE]
         group: Group = self.get_group_by_id_groupnumber(group_name)
+
+        sender: str = msg_parts[CENUM_GROUPMESSAGE_SENDERNICKSOCK]
+        if self.get_my_nicksockname().startswith(sender.strip()):
+            sender = f"[Me] {sender}"
+        sender = sender.split('@')[0]
+
+        time = f"{datetime.now().hour}:{datetime.now().minute}"
+
         if group is not None:
-            self.group_chat_dict[group].append(message_sent)
+            self.group_chat_dict[group].append(f"{sender} ({time}): {message_sent}")
 
     def add_remote_indiv_message(self, sockname: str, message):
         # is this a new message?
         if sockname not in self.indiv_chat_dict:
             self.indiv_chat_dict[sockname] = []
-        
-        self.indiv_chat_dict[sockname].append(f"The other guy: {message}")
+        time = f"{datetime.now().hour}:{datetime.now().minute}"
+        self.indiv_chat_dict[sockname].append(f"{sockname.split('@')[0]} ({time}): {message}")
         print("[MODEL]:", self.indiv_chat_dict[sockname])
         print("---")
 

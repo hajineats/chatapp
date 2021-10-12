@@ -18,6 +18,7 @@ class ChatBox(QWidget):
         # the chat window
         self.chat_browser = None
         self.message_edit = None
+        self.label_whochats = None
 
         # controller, model
         self.controller = controller
@@ -31,7 +32,8 @@ class ChatBox(QWidget):
     def setChatWith(self, others_sockname):
         self.chatting_entity = others_sockname
         self.chat_browser.clear()
-
+        if self.label_whochats is not None:
+            self.label_whochats.setText(f"Chatting with {others_sockname}")
         msg_list: list[str] = self.model.get_indiv_message(self.chatting_entity)
         for msg in msg_list:
             self.chat_browser.append(msg)
@@ -59,7 +61,8 @@ class ChatBox(QWidget):
         # VBOX (chat window)
         if True:
             vbox = QVBoxLayout()
-            vbox.addWidget(QLabel("Chat with Alice"))
+            self.label_whochats = QLabel("Chat with Alice")
+            vbox.addWidget(self.label_whochats)
             self.chat_browser = QTextBrowser()
             
             vbox.addWidget(self.chat_browser)

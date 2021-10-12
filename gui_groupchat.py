@@ -78,6 +78,18 @@ class GroupchatBox(QWidget):
             self.browser_member_list.clear()
             group:Group = self.model.get_group_by_id_groupnumber(group_number)
             for participant in group.participants:
+                isMe = self.model.get_my_nicksockname().startswith(participant.strip())
+                isHost = group.creator_nicksockname.startswith(participant.strip())
+
+                participant = participant.split("@")[0]
+
+                if isMe and isHost:
+                    participant = f"[Me/Host] {participant}"
+                elif isMe:
+                    participant = f"[Me] {participant}"
+                elif isHost:
+                    participant = f"[Host] {participant}"
+
                 self.browser_member_list.append(participant)
 
     def initUI(self):

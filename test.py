@@ -1,2 +1,4 @@
-hi = ["hello", "lol"]
-print(hi.__contains__("lol"))
+from datetime import datetime
+
+now = datetime.now()
+print(now.hour, now.minute)

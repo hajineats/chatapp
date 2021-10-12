@@ -51,12 +51,14 @@ class InviteDialog(QDialog):
         def invite_someone():
             print("[INVITEDIALOG]", self.invitee)
             self.model.send_group_invitation_to_nicksock(self.current_group_number, self.invitee)
+            self.hide()
 
         btn_invite.clicked.connect(lambda: invite_someone())
         
         btn_cancel = QPushButton("Cancel")
         hbox.addWidget(btn_invite)
         hbox.addWidget(btn_cancel)
+        btn_invite.clicked.connect(lambda: self.hide())
 
         vbox.addLayout(hbox)
         

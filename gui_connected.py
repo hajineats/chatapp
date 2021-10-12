@@ -40,6 +40,7 @@ class ConnectedWidget(QWidget):
                 return
             # change screen to groupchat screen
             self.controller.changePageTo(PAGE_GROUPCHAT)
+            self.controller.groupchatbox.setGeometry(self.controller.connected.geometry())
             group_full_name = self.selected_grouptochat.split("@")
             creator_nickname = group_full_name[0]
             creator_sockname = group_full_name[1]
@@ -60,7 +61,7 @@ class ConnectedWidget(QWidget):
         
         self.grid = QGridLayout()
         # first row
-        self.grid.addWidget(QLabel("Connected Clients"),0,0)
+        self.grid.addWidget(QLabel(f"Connected Clients"),0,0)
         self.grid.addWidget(self.listview[LIST_CONNECTED_CLIENTS],1,0)
         btn_start_indiv_chat = QPushButton("1 : 1 Chat", self)
         btn_start_indiv_chat.clicked.connect(lambda: self.controller.chatwith(self.selected_indivtochat))
@@ -80,7 +81,7 @@ class ConnectedWidget(QWidget):
         self.grid.setColumnStretch(1,4)
 
         self.setLayout(self.grid)
-        self.setWindowTitle('Connection Page')
+        self.setWindowTitle('Connected!')
         self.setGeometry(300, 300, WINDOW_WIDTH, WINDOW_HEIGHT)
         self.show()
 
@@ -93,9 +94,20 @@ class ConnectedWidget(QWidget):
         self.listview[LIST_CONNECTED_CLIENTS] = self.generate_list_widget(self.datalist[LIST_CONNECTED_CLIENTS])
         self.listview[LIST_CHAT_ROOMS] = self.generate_list_widget(self.datalist[LIST_CHAT_ROOMS])
 
-    def update_listview(self, list_index, new_list):
+    def update_listview(self, list_index, new_list: list[str]):
         print("i'm here!")
         print(new_list)
+
+        # if this is for updating connected clients list, make sure my nicksock doesn't appear since that's me.
+        if list_index is LIST_CONNECTED_CLIENTS:
+            tmp_list = []
+            for i in new_list:
+                if i.startswith(self.model.get_my_nicksockname()):
+                    pass
+                else:
+                    tmp_list.append(i)
+            new_list = tmp_list
+
         self.datalist[list_index] = new_list
         new_list_widget = self.generate_list_widget(new_list)
         self.listview[list_index] = new_list_widget
