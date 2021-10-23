@@ -65,12 +65,13 @@ class Server():
         self.s.listen(5)
         print(f"[*] Listening as {self.s.getsockname()}")
 
-        server_cert = 'server.crt'
-        server_key = 'server.key'
-        client_certs = 'client.crt'
+        server_cert = './key_cert/server.crt'
+        server_key = './key_cert/server.key'
+        client_certs = './key_cert/client.crt'
 
         self.context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
         self.context.verify_mode = ssl.CERT_REQUIRED
+        self.context.set_ciphers('AES128-SHA')
         self.context.load_cert_chain(certfile=server_cert, keyfile=server_key)
         self.context.load_verify_locations(cafile=client_certs)
 
