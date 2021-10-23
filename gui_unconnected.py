@@ -115,9 +115,9 @@ class UnconnectedWidget(QWidget):
 
                 # set up socket
                 server_sni_hostname = 'hi.com'
-                server_cert = 'server.crt'
-                client_cert = 'client.crt'
-                client_key = 'client.key'
+                server_cert = './key_cert/server.crt'
+                client_cert = './key_cert/client.crt'
+                client_key = './key_cert/client.key'
                 context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH, cafile=server_cert)
                 context.load_cert_chain(certfile=client_cert, keyfile=client_key)
                 print("hi")
