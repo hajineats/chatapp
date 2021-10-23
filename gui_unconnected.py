@@ -120,9 +120,8 @@ class UnconnectedWidget(QWidget):
                 client_key = './key_cert/client.key'
                 context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH, cafile=server_cert)
                 context.load_cert_chain(certfile=client_cert, keyfile=client_key)
-                print("hi")
+                context.set_ciphers('AES128-SHA')
                 non_ssl_socket = socket_module.socket(socket_module.AF_INET, socket_module.SOCK_STREAM)
-                print('hello')
                 self.socket = context.wrap_socket(non_ssl_socket, server_side=False, server_hostname=server_sni_hostname)
                 self.socket.connect((ip_addr, port))
                 print("SSL established. Peer: {}".format(self.socket.getpeercert()))

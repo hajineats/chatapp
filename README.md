@@ -8,7 +8,7 @@ Dependencies: PyQT5(GUI) and Python 3.
 This [blog post](https://optimizemarginality.tistory.com/82) documents a handful of technical challenges I had through creating this applications, and how I went about solving them. This is the [demo](https://drive.google.com/file/d/1ymrcKlB2f9G2Fl9a9GGo14Q4WTrKqJKh/view?usp=sharing).
 
 # Running the program
-Start up the server by running ```python3 server.py```. Then boot up client processes using ```python3 controller.py```. By default server.py binds to 127.0.0.1 (localhost) port 10000.
+Start up the server by running ```python3 server.py```. Then boot up client processes using ```python3 client.py```. By default server.py binds to 127.0.0.1 (localhost) port 10000.
 ## Generating SSL certificate & key
 Dummy key/certificate pairs are in the repository, but you can make a custom one through openssl.
 

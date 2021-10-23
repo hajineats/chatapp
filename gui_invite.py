@@ -1,6 +1,6 @@
 import sys
 from PyQt5.QtWidgets import (QDialog, QApplication, QHBoxLayout, QListView, QListWidget, QVBoxLayout, QWidget, QGridLayout, QLabel, QLineEdit, QTextEdit, QPushButton)
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import QRect, Qt
 from model import Model
 from server import Group
 from controller_interface import ControllerBase
@@ -59,12 +59,16 @@ class InviteDialog(QDialog):
         hbox.addWidget(btn_invite)
         hbox.addWidget(btn_cancel)
         btn_invite.clicked.connect(lambda: self.hide())
+        btn_cancel.clicked.connect(lambda: self.hide())
 
         vbox.addLayout(hbox)
         
         self.setLayout(vbox)
         self.setWindowTitle('Connection Page')
-        self.setGeometry(300, 300, 200, WINDOW_HEIGHT)
+        geometry:QRect = self.controller.connected.geometry()
+        geometry.setWidth(200)
+        geometry.setHeight(400)
+        self.setGeometry(geometry)
 
 
 

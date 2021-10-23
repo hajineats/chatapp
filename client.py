@@ -143,6 +143,7 @@ class InvitationAcceptDeclineDialog(QDialog):
             self.controller.changePageTo(PAGE_GROUPCHAT)
             self.controller.groupchatbox.current_group_number = groupname
             self.model.join_group(None, groupname)
+            self.controller.groupchatbox.setGeometry(self.controller.connected.geometry())
     
         btn_accept.clicked.connect(lambda: handle_accept())
         btn_decline.clicked.connect(lambda: self.hide())
