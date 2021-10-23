@@ -3,7 +3,6 @@
 import socket
 import ssl
 
-
 host_addr = 'localhost'
 host_port = 8082
 server_sni_hostname = 'hi.com'
